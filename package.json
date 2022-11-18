@@ -1,5 +1,5 @@
 {
-  "name": "Warenwirtschaft",
+  "name": "warenwirtschaft",
   "version": "1.0.0",
   "description": "",
   "main": "start.js",
@@ -27,11 +27,11 @@
     "express-formidable-v2": "^2.2.1",
     "morgan": "^1.10.0",
     "pg-promise": "^10.11.1",
-    "got": ">=11.8.5"
+    "got": "^11.8.5"
   },
   "devDependencies": {
     "nodemon": "^2.0.12",
-    "got": ">=11.8.5"
+    "got": "^11.8.5"
   },
   "nodeWinInstaller": {
     "db": {

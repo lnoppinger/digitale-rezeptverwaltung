@@ -18,7 +18,10 @@ let db = pgp({
  */
 function query(q) {
     return new Promise( async (resolve, reject) => {
-        console.log(q.replace(/\n/g, ""))
+
+        if(process.env.DEBUG == "true") {
+            console.log(q.replace(/\n/g, ""))
+        }
 
         db.any(q)
         .then(data => {
