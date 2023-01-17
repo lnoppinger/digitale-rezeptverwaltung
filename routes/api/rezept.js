@@ -227,7 +227,7 @@ routes.put("/", async (req, res) => {
                 name: "Neues Rezept",
                 einheit_id: "(SELECT id FROM einheit WHERE name='St.')",
                 rezept_art_id: "(SELECT id FROM rezept_art WHERE name='Rezept')",
-                menge: 0
+                menge: Math.round(1 * process.env.PREIS_FAKTOR)
             },
             "RETURNING id"
         )

@@ -23,23 +23,22 @@
         }
 
         section {
-            max-width: 400px;
+            width: 400px;
         }
 
-        input, select {
-            width: 97%;
-            margin: 3px 0px
+        select, input {
+            width: 60px;
+        }
+        input.extra, select.extra {
+            width: 250px;
         }
 
         .double {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
         }
-        .double :first-child{
-            width: 75%
-        }
-        .double :last-child {
-            width: 20%;
+        .double :first-child {
+            margin-right: 5px
         }
 
         #zutaten {
@@ -48,22 +47,22 @@
 
         #zutaten .zutat {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             border-bottom: 2px black solid;
         }
         #zutaten .zutat:last-child {
             border-bottom: none;
         }
 
-        #zutaten .zutat .column {
+        #zutaten .zutat .row {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            flex-direction: row;
+            justify-content: space-between;
+            flex-wrap: wrap;
             padding: 10px;
         }
 
         #neu {
-            width: 300px;
             height: 50px;
             display: flex;
             justify-content: center;
@@ -111,20 +110,20 @@
                 <tr>
                     <th> Name: </th>
                     <td> 
-                        <input type="text" id="name" autocomplete="off">
+                        <input type="text" class="extra" name="name" autocomplete="off" title="Name">
                     </td>
                 </tr>
                 <tr>
                     <th> Menge: </th>
                     <td class="double"> 
-                        <input type="text" id="menge" autocomplete="off">
-                        <select id="einheit"></select>
+                        <input type="number" name="menge" autocomplete="off" title="Menge">
+                        <select name="einheit" title="Einheit"></select>
                     </td>
                 </tr>
             </table>
         </section>
 
-        <h2> Varianten </h2>
+        <h2> Lieferanten: </h2>
 
         <section id="zutaten" style="margin-bottom: 40px">
             <div class="zutat" id="neu">
@@ -149,32 +148,79 @@
     <template id="template">
         <div class="zutat">
 
-            <div class="column">
-                <div class="row">
-                    <input type="text" class="name" title="Name der Variante">
-                </div>
+            <div class="row">
+                <input type="text" class="extra" name="name" title="Name">
+                <span class="bearbeiten material-symbols-outlined" title="Bearbeiten"> edit </span>
+                <span class="entfernen material-symbols-outlined" title="Entfernen"> delete </span>
             </div>
 
-            <div class="column">
-                <div class="row">
-                    <input type="date" class="datum" title="Letztes Änderungsdatum des Preises">
+            <div class="row">
+                <div class="double">
+                    <input type="number" name="preis" title="Preis">
+                    <span style="text-align: right"> € </span>
                 </div>
-                <div class="row">
-                    <input type="text" class="preis" title="Preis">
-                </div>
-                <div class="row double">
-                    <input type="number" class="anteil" title="Anteil">
+                <div class="double">
+                    <input type="number" name="anteil" title="Anteil">
                     <span style="text-align: right"> % </span>
                 </div>
+                <input type="date" style="width: 100px" name="datum" title="Letztes Änderungsdatum des Preises">
             </div>
 
-            <div class="column">
-                <div class="row">
-                    <span class="bearbeiten material-symbols-outlined" title="Bearbeiten"> edit </span>
-                </div>
-                <div class="row">
-                    <span class="entfernen material-symbols-outlined" title="Entfernen"> delete </span>
-                </div>
+            <div class="row">
+                <table style="width: 100%">
+                    <tr>
+                        <th colspan="3"> Nährwertangaben pro 100 g </th>
+                    </tr>
+                    <tr>
+                        <td> Energie </td>
+                        <td>
+                            <input type="number" name="nwa_energie" title="Nährwertangabe Energie">
+                        </td>
+                        <td> kJ </td>
+                    </tr>
+                    <tr>
+                        <td> Fett </td>
+                        <td>
+                            <input type="number" class="short" name="nwa_fett" title="Nährwertangabe Fett">
+                        </td>
+                        <td> g </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px"> davon ges. Fettsäuren </td>
+                        <td>
+                            <input type="number" name="nwa_ges_fettsaeuren" title="Nährwertangabe davon ges. Fettsäuren">
+                        </td>
+                        <td> g </td>
+                    </tr>
+                    <tr>
+                        <td> Kohlenhydrate </td>
+                        <td>
+                            <input type="number" name="nwa_kohlenhydrate" title="Nährwertangabe Kohlenhydrate">
+                        </td>
+                        <td> g </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px"> davon Zucker </td>
+                        <td>
+                            <input type="number" name="nwa_zucker" title="Nährwertangabe davon Zucker">
+                        </td>
+                        <td> g </td>
+                    </tr>
+                    <tr>
+                        <td> Eiweiß </td>
+                        <td>
+                            <input type="number" name="nwa_eiweiss" title="Nährwertangabe Eiweiß">
+                        </td>
+                        <td> g </td>
+                    </tr>
+                    <tr>
+                        <td> Salz </td>
+                        <td>
+                            <input type="number" name="nwa_salz" title="Nährwertangabe Salz">
+                        </td>
+                        <td> g </td>
+                    </tr>
+                </table>
             </div>
 
         </div>
@@ -189,7 +235,6 @@
 
             document.getElementById("neu").addEventListener("click", async () => {
                 neueZutat()
-                updateAnteil()
             })
 
             document.getElementById("speichern").addEventListener("click", e => {
@@ -208,9 +253,16 @@
         function neueZutat() {
             cloneTemplate({
                 name: "Neue Variante",
-                anteil: 0,
-                preis: "0,00 €",
-                datum: null
+                anteil: 100,
+                preis: 0.00,
+                datum: new Date().toISOString().split("T")[0],
+                nwa_energie: 0,
+                nwa_fett: 0,
+                nwa_ges_fettsaeuren: 0,
+                nwa_kohlenhydrate: 0,
+                nwa_zucker: 0,
+                nwa_eiweiss: 0,
+                nwa_salz: 0
             }, false)
         }
 
@@ -226,17 +278,18 @@
             if(res.ok) {
                 let body = await res.json()
 
+                document.body.querySelectorAll("section:not(#zutaten) input[name]").forEach(i => {
+                    i.value = body.rezept[i.attributes.name.value]
+                })
+
                 body.einheit.forEach(e => {
                     let opt = document.createElement("option")
                     opt.innerText = e.name
                     opt.value = e.id
                     
-                    document.getElementById("einheit").appendChild(opt)
+                    document.querySelector("select[name=einheit]").appendChild(opt)
                 })
-
-                document.getElementById("name").value = body.rezept.name
-                document.getElementById("menge").value = body.rezept.menge
-                document.getElementById("einheit").value = body.rezept.einheit_id
+                document.querySelector("select[name=einheit]").value = body.rezept.einheit_id
 
                 body.zutaten.forEach(z => {
                     cloneTemplate(z, true)
@@ -245,13 +298,11 @@
         }
         
         function cloneTemplate(daten, disabled) {
-            let template = document.getElementById("template")
-            let t = document.importNode(template.content, true)
+            let t = document.importNode(document.getElementById("template").content, true).firstElementChild
 
-            t.querySelector(".name").value = daten.name
-            t.querySelector(".datum").value = daten.datum
-            t.querySelector(".anteil").value = daten.anteil
-            t.querySelector(".preis").value = daten.preis
+            t.querySelectorAll("input[name]").forEach(i => {
+                i.value = daten[i.attributes.name.value]
+            })
 
             if(disabled) {
                 t.querySelectorAll("input, select").forEach(i => {
@@ -260,13 +311,10 @@
             }
             
             t.querySelector(".entfernen").addEventListener("click", e => {
-                let div = e.target.parentElement.parentElement.parentElement
-                entfernen(div)
-                updateAnteil()
+                entfernen(e.target.closest(".zutat"))
             })
             t.querySelector(".bearbeiten").addEventListener("click", e => {
-                let div = e.target.parentElement.parentElement.parentElement
-                bearbeiten(div)
+                bearbeiten(e.target.closest(".zutat"))
             })
 
             document.getElementById("zutaten").insertBefore(
@@ -283,15 +331,6 @@
 
         function entfernen(div) {
             document.getElementById("zutaten").removeChild(div)
-        }
-
-        function updateAnteil() {
-            let anzahlVarianten = document.getElementById("zutaten").children.length -1
-            let anteil = Math.floor(100 / anzahlVarianten)
-
-            document.getElementById("zutaten").querySelectorAll(".anteil").forEach( i => {
-                i.value = anteil
-            })
         }
 
         async function speichern(id) {
@@ -329,72 +368,78 @@
         }
 
         function parseInput() {
+            let rezept = {}
+            document.querySelectorAll("section:not(#zutaten) [name]").forEach(i => {
+                rezept[i.attributes.name.value] = i.value == "" ? null : i.value || null
+            })
+            rezept.einheit_id = rezept.einheit
+            delete rezept.einheit
+
             let zutaten = []
-            for(let z of document.getElementById("zutaten").children) {
-                if(z.id != "neu") {
-                    zutaten.push({
-                        name: z.querySelector(".name").value,
-                        preis: z.querySelector(".preis").value,
-                        anteil: z.querySelector(".anteil").value,
-                        datum: z.querySelector(".datum").value
-                    })
-                }
-            }
+            document.querySelectorAll("#zutaten .zutat:not(#neu)").forEach(zutatElem => {
+                let zutat = {}
+                zutatElem.querySelectorAll("[name]").forEach(i => {
+                    zutat[i.attributes.name.value] = i.value == "" ? null : i.value || null
+                })
+                zutaten.push(zutat)
+            })
 
             return {
-                rezept: {
-                    name: document.getElementById("name").value,
-                    menge: document.getElementById("menge").value,
-                    einheit_id: document.getElementById("einheit").value,
-                },
+                rezept,
                 zutaten
             }
         }
 
         function returnErrorMessage(input) {
-            if(input.rezept.name == "") {
-                return "Name darf nicht leer sein."
+            for(let key in input.rezept) {
+                if(input.rezept[key] == null) {
+                    let title = document.querySelector(`section:not(#zutaten) [name=${key}]`).title
+                    return `${title} darf nicht leer sein.`
+                }
             }
 
-            if(input.rezept.menge == "") {
-                return "Menge darf nicht leer sein."
-            }
-            if(isNaN(input.rezept.menge)) {
+            if(Number(input.rezept.menge) == NaN) {
                 return "Menge muss eine Zahl sein."
             }
-            if(input.rezept.menge < 0) {
+            if(Number(input.rezept.menge) < 0) {
                 return "Menge darf nicht kleiner als 0 sein"
             }
 
             let anteil = 0
 
-            for(let z of input.zutaten) {
-                if(z.name == "") {
-                    return "Name einer Variante darf nicht leer sein."
+            for(let i=0; i<input.zutaten.length; i++) {
+                let zutat = input.zutaten[i]
+
+                console.log(zutat)
+                if(zutat.name == null) {
+                    return "Name eines Lieferanten darf nicht leer sein."
                 }
-                if(z.preis == "") {
-                    return `Preis der Variante '${z.name}' darf nicht leer sein.`
+
+                for(let key in zutat) {
+                    
+                    if(zutat[key] == null) {
+                        let title = document.querySelectorAll(`#template-zutat [name=${key}]`).title
+                        return `${title} des Lieferanten '${zutat.name}' darf nicht leer sein.`
+                    }
                 }
-                if(z.datum == "") {
-                    return `Datum der Variante '${z.name}' darf nicht leer sein.`
+                
+                if(Number(zutat.anteil) == NaN) {
+                    return `Anteil des Lieferanten '${zutat.name}' muss eine Zahl sein.`
                 }
-                if(z.anteil == "") {
-                    return `Anteil der Variante '${z.name}' darf nicht leer sein.`
+                if(Number(zutat.anteil) < 0) {
+                    return `Anteil des Lieferanten '${zutat.name}' darf nicht kleiner als 0 sein.`
                 }
-                if(isNaN(z.anteil)) {
-                    return `Anteil der Variante '${z.name}' muss eine Zahl sein.`
+                if(Number(zutat.anteil) > 100) {
+                    return `Anteil des Lieferanten '${zutat.name}' darf nicht größer als 100 sein.`
                 }
-                if(z.anteil < 0) {
-                    return `Anteil der Variante '${z.name}' darf nicht kleiner als 0 sein.`
-                }
-                if(z.anteil > 100) {
-                    return `Anteil der Variante '${z.name}' darf nicht größer als 100 sein.`
-                }
-                anteil += Number(z.anteil)
+                anteil += Number(zutat.anteil)
             }
 
             if(anteil > 100) {
-                return "Anteile dürfen insgesamt nicht mehr als 100% ergeben"
+                return "Die Anteile der verschiedenen Lieferanten dürfen insgesamt nicht mehr als 100% ergeben."
+            }
+            if(anteil < 90) {
+                return "Die Anteile der verschiedenen Lieferanten müssen insgesamt mehr als 90% ergeben."
             }
 
             return null
@@ -412,7 +457,6 @@
                 p.style.color = "red"
                 p.innerText = text
             }
-
         }
 
         function abbrechen() {

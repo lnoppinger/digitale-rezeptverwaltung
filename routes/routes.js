@@ -23,7 +23,10 @@ app.use( require('cookie-parser')(process.env.COOKIE_SECRET) )
 
 // Routing
 app.use("/", require("./render"))
-app.use("/api", require("./api/_routes"))
+
+app.use("/api/zutat", require("./api/zutat"))
+app.use("/api/rezept", require("./api/rezept"))
+app.use("/api/berechnen/:id",  require("./api/berechnen"))
 
 
 // static Files

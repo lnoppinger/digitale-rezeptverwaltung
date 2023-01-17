@@ -1,27 +1,31 @@
 CREATE TABLE einheit (
     id SERIAL PRIMARY KEY,
-    name varchar(5)
+    name varchar(5),
+    multiplikator int,
 );
 INSERT INTO einheit (
-    name
+    name,
+    multiplikator
 ) VALUES
 (
-    'kg'
+    'kg',
+    1000
 ),
 (
-    'g'
+    'g',
+    1
 ),
 (
-    'l'
+    'l',
+    1000
 ),
 (
-    'ml'
+    'ml',
+    1
 ),
 (
-    'St.'
-),
-(
-    '%'
+    'St.',
+    1
 );
 
 CREATE TABLE rezept_art (
@@ -55,7 +59,15 @@ CREATE TABLE zutat (
     rezept_id int REFERENCES rezept(id) ON DELETE CASCADE,
     anteil int,
     preis int,
-    datum char(10)
+    datum char(10),
+    nwa_menge,
+    nwa_energie int,
+    nwa_fett int,
+    nwa_ges_fettsaeuren int,
+    nwa_kohlenhydrate int,
+    nwa_zucker int,
+    nwa_eiweiss int,
+    nwa_salz int
 );
 
 CREATE TABLE rezept_map (

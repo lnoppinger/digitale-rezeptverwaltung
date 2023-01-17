@@ -1,3 +1,11 @@
+module.exports = {
+    query,
+    insertJSON,
+    selectJSON,
+    updateJSON,
+    deleteRow
+}
+
 require('dotenv').config()
 
 
@@ -104,13 +112,4 @@ function insertJSON(table, data, end="") {
 
 function deleteRow(table, end) {
     return query(`DELETE FROM ${table} ${end}`)
-}
-
-
-module.exports = {
-    query,
-    insertJSON,
-    selectJSON,
-    updateJSON,
-    deleteRow
 }
