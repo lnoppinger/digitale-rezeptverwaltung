@@ -11,6 +11,13 @@
             flex-direction: column;
             align-items: center;
         }
+
+        pre {
+            max-width: calc(100vw - 100px);
+            margin: 50px;
+            overflow-x: auto;
+
+        }
     </style>
 
     <title> Berechnen </title>
@@ -20,15 +27,21 @@
         <a href="/" style="color: black; text-decoration: none"> Zurück </a>
     </div>
 
-    <h1> <%= title %> </h1>
+    <h1> Berechnen </h1>
 
     <section>
         <input type="text" id="rezept" list="rezepte-liste">
+        <select id="berechnungsart">
+            <option value="rezept"> Alle Rezepte anzeigen </option>
+            <option value="zutaten"> Zutatenliste erstellen </option>
+            <option value="preis"> Preis Kalkulieren </option>
+            <option value="naehrwerte"> Nährwertangabe erstellen </option>
+        </select>
         <button id="start"> Starten </button>
     </section>
 
     <section>
-        <pre id="ergebnis"></pre>
+        <pre id="ergebnis"> </pre>
     </section>
 
     <datalist id="rezepte-liste"> </datalist>
@@ -37,9 +50,16 @@
         window.onload = async () => {
             await fillListe()
 
+            let search = new URLSearchParams(location.search)
+            if(search.has("berechnungsart")) {
+                document.getElementById("berechnungsart").value = search.get("berechnungsart")
+            }
+
             document.getElementById("start").addEventListener("click", e => {
                 start()
-            }) 
+            })
+
+            setResult("Bitte wählen Sie ein Rezept zum Berechnen aus.", "normal")
         }
 
         async function fillListe() {
@@ -75,7 +95,9 @@
                 return
             }
 
-            let res = await fetch(`/api/berechnen/${id}/<%= apiLastPath %>`)
+            let berechnungsart = document.getElementById("berechnungsart").value || "rezept"
+
+            let res = await fetch(`/api/berechnen/${id}/${berechnungsart}`)
 
             if(res.ok) {
                 let body = await res.text()

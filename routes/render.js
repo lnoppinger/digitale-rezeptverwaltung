@@ -25,17 +25,8 @@ routes.get("/zutat/bearbeiten", (req, res) => {
 })
 
 
-routes.get("/berechnen/preis", (req, res) => {
-    res.render("berechnen", {
-        title: "Preis Berechnen",
-        apiLastPath: "preis"
-    })
-})
-routes.get("/berechnen/zutaten", (req, res) => {
-    res.render("berechnen", {
-        title: "Zutaten Berechnen",
-        apiLastPath: "zutaten"
-    })
+routes.get("/berechnen", (req, res) => {
+    res.render("berechnen")
 })
 
 

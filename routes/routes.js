@@ -26,7 +26,7 @@ app.use("/", require("./render"))
 
 app.use("/api/zutat", require("./api/zutat"))
 app.use("/api/rezept", require("./api/rezept"))
-app.use("/api/berechnen/:id",  require("./api/berechnen"))
+app.use("/api/berechnen",  require("./api/berechnen"))
 
 
 // static Files

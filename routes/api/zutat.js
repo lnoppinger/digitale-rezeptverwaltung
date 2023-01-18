@@ -48,7 +48,7 @@ routes.get("/:id", async (req, res) => {
             return
         }
 
-        qResRezept[0].menge = Math.round(qResRezept[0].menge / process.env.MENGE_FAKTOR)
+        qResRezept[0].menge = qResRezept[0].menge / process.env.MENGE_FAKTOR
         
         let qResZutaten = await db.selectJSON(
             "zutat",
@@ -68,7 +68,7 @@ routes.get("/:id", async (req, res) => {
             `WHERE rezept_id = ${req.params.id}`
         )
         qResZutaten = qResZutaten.map(zutat => {
-            zutat.preis = Math.round(zutat.preis / process.env.PREIS_FAKTOR)
+            zutat.preis = zutat.preis / process.env.PREIS_FAKTOR
             return zutat
         })
 
@@ -143,7 +143,7 @@ routes.post("/:id", async (req, res) => {
             delete req.body.zutaten[i].id
 
             if(req.body.zutaten[i]?.preis) {
-                req.body.zutaten[i].preis = Math.round(req.body.zutaten[i]?.preis * process.env.PREIS_FAKTOR)
+                req.body.zutaten[i].preis = req.body.zutaten[i]?.preis * process.env.PREIS_FAKTOR
             }
 
             promises.push( db.updateJSON(
@@ -167,7 +167,7 @@ routes.put("/", async (req, res) => {
         let qRes = await db.insertJSON(
             "rezept",
             {
-                name: "Neuer Lieferant",
+                name: "Neue Zutat",
                 einheit_id: "(SELECT id FROM einheit WHERE name = 'St.')",
                 rezept_art_id: "(SELECT id FROM rezept_art WHERE name = 'Zutat')",
                 menge: Math.round(1 * process.env.PREIS_FAKTOR)
