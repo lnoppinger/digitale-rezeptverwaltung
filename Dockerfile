@@ -2,7 +2,7 @@ FROM node:14
 
 COPY package*.json ./
 
-RUN npm install && nmp audit fix
+RUN npm install && npm audit fix
 
 COPY . ./
 
