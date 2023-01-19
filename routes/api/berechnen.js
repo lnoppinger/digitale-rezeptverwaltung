@@ -114,7 +114,7 @@ routes.get("/:id/naehrwerte", async (req, res) => {
             (lieferant, text) => `${slice(`${text}${String(Math.round(lieferant.anteil)).padStart(3, " ")}% ${lieferant.name}`, 80)}${slice(lieferant.gesamt_nwa_energie_kj, 10)}kJ ${slice(lieferant.gesamt_nwa_energie_kcal, 8)}kcal ${slice(lieferant.gesamt_nwa_fett, 8)}g ${slice(lieferant.gesamt_nwa_ges_fettsaeuren, 23)}g ${slice(lieferant.gesamt_nwa_kohlenhydrate, 13)}g ${slice(lieferant.gesamt_nwa_zucker, 13)}g ${slice(lieferant.gesamt_nwa_eiweiss, 8)}g ${slice(lieferant.gesamt_nwa_salz, 8)}g`,
             10
         )
-        textGanz += `${"".padEnd(80, " ").padEnd(185, "-")}
+        textGanz += `${"".padEnd(80, " ").padEnd(190, "-")}
 ${"".padEnd(80, " ")}${slice(daten.gesamt_nwa_energie_kj, 10)}kJ ${slice(daten.gesamt_nwa_energie_kcal, 8)}kcal ${slice(daten.gesamt_nwa_fett, 8)}g ${slice(daten.gesamt_nwa_ges_fettsaeuren, 23)}g ${slice(daten.gesamt_nwa_kohlenhydrate, 13)}g ${slice(daten.gesamt_nwa_zucker, 13)}g ${slice(daten.gesamt_nwa_eiweiss, 8)}g ${slice(daten.gesamt_nwa_salz, 8)}g
 
 Energie:   ${slice(daten.gesamt_nwa_energie_kj, 10)}kJ ${slice(daten.gesamt_nwa_energie_kcal, 8)}kcal

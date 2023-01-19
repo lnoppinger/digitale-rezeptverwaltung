@@ -1,7 +1,7 @@
 CREATE TABLE einheit (
     id SERIAL PRIMARY KEY,
     name varchar(5),
-    multiplikator int,
+    multiplikator int
 );
 INSERT INTO einheit (
     name,
@@ -60,7 +60,6 @@ CREATE TABLE zutat (
     anteil int,
     preis int,
     datum char(10),
-    nwa_menge,
     nwa_energie int,
     nwa_fett int,
     nwa_ges_fettsaeuren int,
