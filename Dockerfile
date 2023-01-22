@@ -1,10 +1,10 @@
 FROM node:14
 
-COPY package*.json .
+COPY package*.json ./
 
-RUN npm install
+RUN npm install && npm audit fix
 
-COPY . .
+COPY . ./
 
 EXPOSE 3000
 
