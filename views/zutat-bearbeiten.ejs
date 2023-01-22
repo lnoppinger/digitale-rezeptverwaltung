@@ -110,7 +110,7 @@
                 <tr>
                     <th> Name: </th>
                     <td> 
-                        <input type="text" class="extra" name="name" autocomplete="off" title="Name">
+                        <input type="text" class="extra" name="name" id="name" autocomplete="off" title="Name">
                     </td>
                 </tr>
                 <tr>
@@ -119,6 +119,10 @@
                         <input type="number" name="menge" autocomplete="off" title="Menge">
                         <select name="einheit" title="Einheit"></select>
                     </td>
+                </tr>
+                <tr>
+                    <th> Kennzeichnungspflichtig (Allergene): </th>
+                    <td> <input type="checkbox" id="allergene"> </td>
                 </tr>
             </table>
         </section>
@@ -278,6 +282,11 @@
             if(res.ok) {
                 let body = await res.json()
 
+                if(body.rezept.name.substr(-4) == " (A)") {
+                    body.rezept.name = body.rezept.name.replace(" (A)", "")
+                    document.getElementById("allergene").checked = true
+                }
+
                 document.body.querySelectorAll("section:not(#zutaten) input[name]").forEach(i => {
                     i.value = body.rezept[i.attributes.name.value]
                 })
@@ -339,6 +348,10 @@
             }
 
             let input = parseInput()
+
+            if(document.getElementById("allergene").checked) {
+                input.rezept.name += " (A)"
+            }
 
             let error = returnErrorMessage(input)
             if(error != null) {
