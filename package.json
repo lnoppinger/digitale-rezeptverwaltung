@@ -30,7 +30,7 @@
     "pg-promise": "^10.11.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^3.0.1"
   },
   "nodeWinInstaller": {
     "db": {
