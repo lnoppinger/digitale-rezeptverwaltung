@@ -1,5 +1,5 @@
 const routes = require("express")()
-const excelJS = require("excelJS")
+const excelJS = require("exceljs")
 
 require("dotenv").config()
 const db = require("../../modules/db")
