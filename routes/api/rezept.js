@@ -16,7 +16,8 @@ routes.get("/alle", async (req, res) => {
             ],
             `JOIN rezept_art
                 ON rezept.rezept_art_id = rezept_art.id
-            WHERE NOT rezept_art.name ='Zutat'`
+            WHERE NOT rezept_art.name ='Zutat'
+            ORDER BY rezept.name ASC`
         )
 
         res.json({
@@ -136,7 +137,7 @@ routes.get("/:id", async (req, res) => {
         )
 
         if(qResRezept.length <= 0) {
-            res.status(400).send(`Es existiert keine Zutat mit der id '${req.params.id}'`)
+            res.status(400).send(`Es existiert kein Rezept mit der id '${req.params.id}'`)
             return
         }
 
@@ -209,6 +210,21 @@ routes.get("/:id", async (req, res) => {
     }
 })
 
+
+routes.post("/:id/umwandeln", async (req, res) => {
+    try {
+        await db.updateJSON(
+            "rezept",
+            {
+                rezept_art_id: "(SELECT id FROM rezept_art WHERE name='Zutat')"
+            },
+            `WHERE id=${Number(req.params.id)}`
+        )
+        res.sendStatus(200)
+    } catch(e) {
+        res.status(500).send(e.stack || e)
+    }
+})
 
 routes.post("/:id", async (req, res) => {
     try {
