@@ -88,7 +88,7 @@ routes.get("/:id/preis", async (req, res) => {
             daten,
             (rezept, text) => `\n${text}${slice(rezept.menge, 7)}${slice(rezept.einheit, 3)} ${slice(rezept.faktor, 7)}x ${rezept.name} (${rezept.rezept_menge}${rezept.einheit})`,
             (zutat, text) => `\n${text}${slice(zutat.menge, 7)}${slice(zutat.einheit, 3)} ${zutat.name}`,
-            (lieferant, text) => `${slice(`${text}${String(Math.round(lieferant.anteil)).padStart(3, " ")}% ${lieferant.name}`, 80)}${slice(lieferant.gesamt_preis, 7)}€`,
+            (lieferant, text) => `${slice(`${text}${String(Math.round(lieferant.anteil)).padStart(3, " ")}% ${lieferant.name}`, 80)}${slice(lieferant.gesamt_preis, 7)}€ (stand: ${lieferant.datum.split("-").reverse().join(".")})`,
             10
         )
         textGanz += `${"".padEnd(80, " ")}--------

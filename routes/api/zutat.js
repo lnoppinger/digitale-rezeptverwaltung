@@ -10,11 +10,15 @@ routes.get("/alle", async (req, res) => {
             [
                 "rezept.id as id",
                 "rezept.name as name",
-                "rezept_art.name as rezept_art"
+                "rezept_art.name as rezept_art",
+                "MAX(zutat.datum) as zuletzt_geaendert"
             ],
             `JOIN rezept_art
                 ON rezept.rezept_art_id = rezept_art.id
+            JOIN zutat
+                ON rezept.id = zutat.rezept_id
             WHERE rezept_art.name = 'Zutat'
+            GROUP BY rezept.id, rezept_art.id
             ORDER BY rezept.name ASC`
         )
 
