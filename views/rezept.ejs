@@ -4,111 +4,487 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <link rel="stylesheet" href="/css/icons.css" />
-    
-    <style>
-        .material-symbols-outlined:hover {
-            cursor: pointer;
-        }
 
+    <link rel="stylesheet" href="/css/icons.css" />
+
+    <style>
         body {
             display: flex;
-            justify-content: center;
             flex-direction: column;
             align-items: center;
         }
 
-        table {
-            width: fit-content;
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            background-color: white;
         }
 
-        table th, table td {
-            padding: 2px 10px;
-            text-align: left;
+        section {
+            max-width: 400px;
+            margin: 20px auto;
         }
+
+        input, select {
+            width: 97%;
+            margin: 3px 0px
+        }
+
+        .double {
+            display: flex;
+            justify-content: space-between;
+        }
+        .double :first-child{
+            width: 75%
+        }
+        .double :last-child {
+            width: 20%;
+        }
+
+        #zutaten {
+            border: 2px solid black;
+        }
+
+        #zutaten .zutat {
+            display: flex;
+            flex-direction: row;
+            border-bottom: 2px black solid;
+        }
+        #zutaten .zutat:last-child {
+            border-bottom: none;
+        }
+
+        #zutaten .zutat .column {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        #zutaten .zutat .bearbeiten-link {
+            font-size: 12px;
+            color: black;
+            text-decoration: none;
+        }
+
+        #neu {
+            min-width: 300px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #neu:hover{
+            cursor: pointer;
+        }
+
+        span.material-symbols-outlined:hover {
+            cursor: pointer;
+            filter: opacity(0.6);
+        }
+
+        #buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        button {
+            border-radius: 20px;
+            border: 2px solid black;
+            padding: 2px 13px;
+            margin: 0px 10px;
+            filter: opacity(0.8);
+        }
+        button:hover {
+            filter: brightness(0.9);
+            cursor: pointer;
+        }
+
+
     </style>
 
-    <title> Rezepte </title>
+    <title> Warenwirtschaft </title>
 </head>
 <body>
-    <div style="width: 100%">
-        <a href="/" style="color: black; text-decoration: none"> Zurück </a>
-    </div>
-    
-    <h1> Rezepte </h1>
 
-    <table>
-        <tr>
-            <th> Name: </th>
-            <th> Optionen: </th>
-        </tr>
-        <tr id="neu-tr">
-            <th colspan="2" style="text-align: center;">
-                <span id="neu" class="material-symbols-outlined" title="Neues Rezept hinzufügen"> add </span>
-            </th>
-        </tr>
-    </table>
+    <main>
+
+        <h1> Rezept bearbeiten </h1>
+
+        <section>
+            <table>
+                <tr>
+                    <th> Name: </th>
+                    <td> 
+                        <input type="text" name="name" autocomplete="off">
+                    </td>
+                </tr>
+                <tr>
+                    <th> Rezept-Art: </th>
+                    <td> 
+                        <select name="rezept-art"> </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th> Menge: </th>
+                    <td class="double"> 
+                        <input type="text" name="menge" autocomplete="off">
+                        <select id="einheit"></select>
+                    </td>
+                </tr>
+            </table>
+        </section>
+
+        <h2> Zutaten </h2>
+
+        <section id="zutaten">
+            <div class="zutat" id="neu">
+                <span class="material-symbols-outlined" title="Neue Variante Hinzufügen"> add </span>
+            </div>
+        </section>
+
+        <section id="error" style="color: red">
+            <p id="error-message"></p>
+        </section>
+
+        <section>
+            <button id="umwandeln"> Rezept in eine Zutat umwandeln </button>
+        </section>
+
+        <section id="buttons">
+            <button id="speichern" style="background-color: green"> Speichern </button>
+            <button id="abbrechen" style="background-color: orange;"> Abbrechen </button>
+            <button id="loeschen" style="background-color: red;"> Löschen </button>
+        </section>
+        
+    </main>
+
+    
 
     <template id="template">
-        <tr>
-            <td class="name"></td>
-            <td style="text-align: center">
-                <span class="bearbeiten material-symbols-outlined" title="Rezept bearbeiten"> edit </span>
-            </td>
-        </tr>
+        <div class="zutat">
+
+            <div class="row">
+                <input type="text" class="extra" name="name" title="Name">
+                <span class="bearbeiten-details material-symbols-outlined" title="Zutat in neuem Fenster bearbeiten" style="margin-left: 10px"> edit_note </span>
+                <span class="bearbeiten material-symbols-outlined" title="Bearbeiten"> edit </span>
+                <span class="entfernen material-symbols-outlined" title="Entfernen"> delete </span>
+            </div>
+
+            <div class="row double">
+                <input type="number" name="menge" title="Menge der Zutat">
+                <span class="einheit" style="text-align: right"> </span>
+            </div>
+
+            <div class="row">
+                <textarea name="kommentar"></textarea>
+            </div>
+
+        </div>
     </template>
 
-    <script>
-        window.onload = async () => {
-            await fillTable()
+    <datalist id="zutaten-liste"> </datalist>
 
-            document.getElementById("neu").addEventListener("click", e => {
-                neu()
+    <script>
+        window.onload = () => {
+            let search = new URLSearchParams(location.search)
+            let id = search.get("id")
+
+            fillDaten(id)
+
+            document.getElementById("neu").addEventListener("click", async () => {
+                neueZutat()
+            })
+
+            document.getElementById("speichern").addEventListener("click", e => {
+                speichern(id)
+            })
+
+            document.getElementById("abbrechen").addEventListener("click", e => {
+                abbrechen()
+            })
+
+            document.getElementById("loeschen").addEventListener("click", e => {
+                loeschen(id)
+            })
+
+            document.getElementById("umwandeln").addEventListener("click", e => {
+                umwandeln(id)
             })
         }
 
-        async function fillTable() {
-            let res = await fetch("/api/rezept/alle")
+        function neueZutat() {
+            cloneTemplate({
+                id: null,
+                name: null,
+                menge: 1,
+                einheit: "St.",
+                ist_zutat: false
+            }, false)
+        }
+
+        async function fillDaten(id) {
+            if(id == null || isNaN(id)) {
+                return
+            }
+
+            let res = await fetch(`/api/rezept/${id}`, {
+                method: "GET"
+            })
 
             if(res.ok) {
                 let body = await res.json()
 
-                body.rezepte.forEach(r => {
-                    let template = document.getElementById("template")
-                    let t = document.importNode(template.content, true)
-
-                    t.querySelector(".name").innerText = r.name
-                    t.querySelector("tr").id = r.id
-
-                    t.querySelector(".bearbeiten").addEventListener("click", e => {
-                        let tr = e.target.parentElement.parentElement
-                        bearbeiten(tr)
-                    })
-
-                    document.querySelector("table").querySelector("tbody").insertBefore(
-                        t,
-                        document.getElementById("neu-tr")
-                    )
+                body.einheit.forEach(e => {
+                    let opt = document.createElement("option")
+                    opt.innerText = e.name
+                    opt.value = e.id
+                    
+                    document.getElementById("einheit").appendChild(opt)
                 })
+
+                body.rezeptArt.forEach(e => {
+                    let opt = document.createElement("option")
+                    opt.innerText = e.name
+                    opt.value = e.id
+                    
+                    document.getElementById("rezept-art").appendChild(opt)
+                })
+
+                body.zutatenOptional.forEach(z => {
+                    let opt = document.createElement("option")
+                    opt.value = z.name
+                    opt.dataset.json = encodeURI( JSON.stringify(z) )
+
+                    document.getElementById("zutaten-liste").appendChild(opt)
+                })
+
+                document.getElementById("name").value = body.rezept.name
+                document.getElementById("menge").value = body.rezept.menge
+                document.getElementById("einheit").value = body.rezept.einheit_id
+                document.getElementById("rezept-art").value = body.rezept.rezept_art_id
+
+                body.zutaten.forEach(z => {
+                    cloneTemplate(z, true)
+                })
+            } else {
+                status("error", await res.text())
+            }
+        }
+        
+        function cloneTemplate(daten, disabled) {
+            let template = document.getElementById("template")
+            let t = document.importNode(template.content, true)
+
+            t.querySelector("input[name=name]").value = daten.name
+            t.querySelector("input[name=menge]").value = daten.menge
+            t.querySelector(".einheit").innerText = daten.einheit
+
+            console.log(daten)
+
+            if(daten.ist_zutat) {
+                t.querySelector(".bearbeiten-link").href = `/zutat/bearbeiten?id=${daten.id}`
+            } else {
+                t.querySelector(".bearbeiten-link").href = `/rezept/bearbeiten?id=${daten.id}`
+            }
+
+            if(disabled) {
+                t.querySelectorAll("input, select").forEach(i => {
+                    i.disabled = true
+                })
+            }
+            
+            t.querySelector(".entfernen").addEventListener("click", e => {
+                let div = e.target.parentElement.parentElement.parentElement
+                entfernen(div)
+            })
+            t.querySelector(".bearbeiten").addEventListener("click", e => {
+                let div = e.target.parentElement.parentElement.parentElement
+                bearbeiten(div)
+            })
+            t.querySelector("input[name=name]").addEventListener("change", e => {
+                let div = e.target.parentElement.parentElement.parentElement
+                updateZutatDaten(div)
+            })
+
+            document.getElementById("zutaten").insertBefore(
+                t,
+                document.getElementById("neu")
+            )
+        }
+
+        function bearbeiten(div) {
+            div.querySelectorAll("input, select").forEach(i => {
+                i.disabled = false
+            })
+        }
+
+        function entfernen(div) {
+            document.getElementById("zutaten").removeChild(div)
+        }
+
+        function updateZutatDaten(div) {
+            let name = div.querySelector(".name").value
+
+            for(let opt of document.getElementById("zutaten-liste").children) {
+                let json = JSON.parse( decodeURI(opt.dataset.json) )
+                
+                if(json.name == name) {
+                    div.querySelector(".einheit").innerText = json.einheit
+
+                    if(json.ist_zutat) {
+                        div.querySelector(".bearbeiten-link").href = `/zutat/bearbeiten?id=${json.id}`
+                    } else {
+                        div.querySelector(".bearbeiten-link").href = `/rezept/bearbeiten?id=${json.id}`
+                    }
+
+                    break
+                }
             }
         }
 
-        function bearbeiten(tr) {
-            location.assign(`/rezept/bearbeiten?id=${tr.id}`)
+        async function speichern(id) {
+            if(id == null || isNaN(id)) {
+                return
+            }
+
+            let input = parseInput()
+
+            let error = returnErrorMessage(input)
+            if(error != null) {
+                status("error", error)
+                console.error(error)
+                return
+            }
+
+            status("clear")
+            console.log(input)
+            
+            let res = await fetch(`/api/rezept/${id}`, {
+                method: "POST",
+                body: JSON.stringify(input),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            if(res.ok) {
+                status("success", "Rezept wurde erfolgreich gespeichert.")
+                setTimeout( () => {
+                    location.assign("/rezept")
+                }, 2000)
+            } else {
+                status("error", await res.text())
+            }
         }
 
-        async function neu() {
-            let res = await fetch("/api/rezept", {
-                method: "PUT"
+        function parseInput() {
+            let rezept = {}
+            document.querySelectorAll("section:not(#zutaten) [name]").forEach(i => {
+                rezept[i.attributes.name.value] = i.value == "" ? null : i.value || null
+            })
+            rezept.einheit_id = rezept.einheit
+            delete rezept.einheit
+
+            let zutaten = []
+            document.querySelectorAll("#zutaten .zutat:not(#neu)").forEach(zutatElem => {
+                let zutat = {}
+                zutatElem.querySelectorAll("[name]").forEach(i => {
+                    zutat[i.attributes.name.value] = i.value == "" ? null : i.value || null
+                })
+                zutaten.push(zutat)
             })
 
-            if(res.ok) {
-                let body = await res.json()
+            return {
+                rezept,
+                zutaten
+            }
+        }
 
-                location.assign(`/rezept/bearbeiten?id=${body.id}`)
+        function returnErrorMessage(input) {
+            if(input.rezept.name == "") {
+                return "Name darf nicht leer sein."
+            }
+
+            if(input.rezept.menge == "") {
+                return "Menge darf nicht leer sein."
+            }
+            if(isNaN(input.rezept.menge)) {
+                return "Menge muss eine Zahl sein."
+            }
+            if(input.rezept.menge < 0) {
+                return "Menge darf nicht kleiner als 0 sein."
+            }
+            if(input.zutaten.length < 1) {
+                return "Zutaten darf nicht leer sein."
+            }
+
+            let anteil = 0
+
+            for(let z of input.zutaten) {
+                if(z.name == "") {
+                    return "Name einer Zutat darf nicht leer sein."
+                }
+                if(z.menge == "") {
+                    return `Menge der Zutat '${z.name}' darf nicht leer sein.`
+                }
+            }
+
+            return null
+        }
+
+        function status(status, text="") {
+            let p = document.getElementById("error-message")
+            
+            if(status == "clear") {
+                p.innerText = null
+            } else if(status == "success") {
+                p.style.color = "green"
+                p.innerText = text
+            } else if(status == "error") {
+                p.style.color = "red"
+                p.innerText = text
+            }
+
+        }
+
+        function abbrechen() {
+            if(!confirm("Alle Änderungen verwerfen?")) return
+
+            location.assign("/rezept")
+        }
+
+        async function loeschen(id) {
+            if(!confirm("Dieses Rezept Löschen?")) return
+
+            let res = await fetch(`/api/rezept/${id}`, {
+                method: "DELETE"
+            })
+            if(res.ok) {
+                status("success", "Rezept wurde erfolgreich gelöscht.")
+                setTimeout( () => {
+                    location.assign("/rezept")
+                }, 2000)
+            } else {
+                status("error", await res.text())
+            }
+        }
+
+        async function umwandeln(id) {
+            let res = await fetch(`/api/rezept/${id}/umwandeln`, {
+                method: "POST"
+            })
+            if(res.ok) {
+                status("success", "Rezept wurde erfolgreich in eine Zutat umgewandelt.")
+                setTimeout( () => {
+                    location.assign(`/zutat/bearbeiten?id=${id}`)
+                }, 2000)
+            } else {
+                status("error", await res.text())
             }
         }
     </script>
+    
 </body>
 </html>
