@@ -16,7 +16,8 @@ routes.get("/alle", async (req, res) => {
             ],
             `JOIN rezept_art
                 ON rezept.rezept_art_id = rezept_art.id
-            WHERE NOT rezept_art.name ='Zutat'`
+            WHERE NOT rezept_art.name ='Zutat'
+            ORDER BY rezept.name ASC`
         )
 
         res.json({
