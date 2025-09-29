@@ -19,25 +19,25 @@
 	"workspaceFolder": "/workspace",
 
 	// Set *default* container specific settings.json values on container create.
-	// "settings": {
-	// 	"javascript.validate.enable": false,
-	// 	"liveSassCompile.settings.generateMap": false,
-	// 	"liveSassCompile.settings.formats": [
-	// 		{
-	// 			"format": "expanded",
-	// 			"extensionName": ".css",
-	// 			"savePath": "/public/css/"
-	// 		}
-	// 	]
-	// },
+	"settings": {
+		"javascript.validate.enable": false,
+		"liveSassCompile.settings.generateMap": false,
+		"liveSassCompile.settings.formats": [
+			{
+				"format": "expanded",
+				"extensionName": ".css",
+				"savePath": "/public/css/"
+			}
+		]
+	},
 
 	// Add the IDs of extensions you want installed when the container is created.
-	// "extensions": [
-	// 	"syler.sass-indented",
-	// 	"ritwickdey.live-sass",
-	// 	"flowtype.flow-for-vscode",
-	// 	"ckolkman.vscode-postgres"
-	// ],
+	"extensions": [
+		"syler.sass-indented",
+		"ritwickdey.live-sass",
+		"flowtype.flow-for-vscode",
+		"ckolkman.vscode-postgres"
+	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [3000],

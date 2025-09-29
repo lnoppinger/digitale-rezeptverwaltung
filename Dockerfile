@@ -1,8 +1,8 @@
-FROM node:24
+FROM node:14
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install && npm audit fix
 
 COPY . ./
 

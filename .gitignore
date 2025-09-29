@@ -4,6 +4,4 @@ node_modules
 
 .devcontainer/db/data
 
-.testdata
-
-package-lock.json
+.testdata/

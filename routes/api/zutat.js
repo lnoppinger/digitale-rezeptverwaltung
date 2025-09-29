@@ -73,16 +73,7 @@ routes.get("/:id", async (req, res) => {
             `WHERE rezept_id = ${req.params.id}`
         )
         qResZutaten = qResZutaten.map(zutat => {
-            zutat.preis /= process.env.PREIS_FAKTOR
-
-            zutat.nwa_energie /= process.env.MENGE_FAKTOR
-            zutat.nwa_fett /= process.env.MENGE_FAKTOR
-            zutat.nwa_ges_fettsaeuren /= process.env.MENGE_FAKTOR
-            zutat.nwa_kohlenhydrate /= process.env.MENGE_FAKTOR
-            zutat.nwa_zucker /= process.env.MENGE_FAKTOR
-            zutat.nwa_eiweiss /= process.env.MENGE_FAKTOR
-            zutat.nwa_salz /= process.env.MENGE_FAKTOR
-
+            zutat.preis = zutat.preis / process.env.PREIS_FAKTOR
             return zutat
         })
 
@@ -100,21 +91,6 @@ routes.get("/:id", async (req, res) => {
             einheit: qResEinheit
         })
 
-    } catch(e) {
-        res.status(500).send(e.stack || e)
-    }
-})
-
-routes.post("/:id/umwandeln", async (req, res) => {
-    try {
-        await db.updateJSON(
-            "rezept",
-            {
-                rezept_art_id: "(SELECT id FROM rezept_art WHERE name='Rezept')"
-            },
-            `WHERE id=${Number(req.params.id)}`
-        )
-        res.sendStatus(200)
     } catch(e) {
         res.status(500).send(e.stack || e)
     }
@@ -171,15 +147,9 @@ routes.post("/:id", async (req, res) => {
             delete req.body.zutaten[i].rezept_id
             delete req.body.zutaten[i].id
 
-            if(req.body.zutaten[i]?.preis) req.body.zutaten[i].preis *= process.env.PREIS_FAKTOR
-
-            if(req.body.zutaten[i]?.nwa_energie) req.body.zutaten[i].nwa_energie *= process.env.MENGE_FAKTOR
-            if(req.body.zutaten[i]?.nwa_fett) req.body.zutaten[i].nwa_fett *= process.env.MENGE_FAKTOR
-            if(req.body.zutaten[i]?.nwa_ges_fettsaeuren) req.body.zutaten[i].nwa_ges_fettsaeuren *= process.env.MENGE_FAKTOR
-            if(req.body.zutaten[i]?.nwa_kohlenhydrate) req.body.zutaten[i].nwa_kohlenhydrate *= process.env.MENGE_FAKTOR
-            if(req.body.zutaten[i]?.nwa_zucker) req.body.zutaten[i].nwa_zucker *= process.env.MENGE_FAKTOR
-            if(req.body.zutaten[i]?.nwa_eiweiss) req.body.zutaten[i].nwa_eiweiss *= process.env.MENGE_FAKTOR
-            if(req.body.zutaten[i]?.nwa_salz) req.body.zutaten[i].nwa_salz *= process.env.MENGE_FAKTOR
+            if(req.body.zutaten[i]?.preis) {
+                req.body.zutaten[i].preis = req.body.zutaten[i]?.preis * process.env.PREIS_FAKTOR
+            }
 
             promises.push( db.updateJSON(
                 "zutat",

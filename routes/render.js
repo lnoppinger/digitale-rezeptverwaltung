@@ -4,24 +4,24 @@ const db = require("../modules/db")
 
 
 routes.get("/", (req, res) => {
-    res.render("dashboard")
+    res.render("home")
 })
 
 
-routes.get("/rezepte", (req, res) => {
-    res.render("rezepte")
-})
-routes.get("/rezept/bearbeiten", (req, res) => {
+routes.get("/rezept", (req, res) => {
     res.render("rezept")
 })
+routes.get("/rezept/bearbeiten", (req, res) => {
+    res.render("rezept-bearbeiten")
+})
 
 
-routes.get("/zutaten", (req, res) => {
-    res.render("zutaten")
+routes.get("/zutat", (req, res) => {
+    res.render("zutat")
 })
 routes.get("/zutat/bearbeiten", (req, res) => {
 
-    res.render("zutat")
+    res.render("zutat-bearbeiten")
 })
 
 

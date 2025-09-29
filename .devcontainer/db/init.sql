@@ -1,6 +1,6 @@
 CREATE TABLE einheit (
     id SERIAL PRIMARY KEY,
-    name varchar(30),
+    name varchar(5),
     multiplikator int
 );
 INSERT INTO einheit (
@@ -8,8 +8,16 @@ INSERT INTO einheit (
     multiplikator
 ) VALUES
 (
+    'kg',
+    1000
+),
+(
     'g',
     1
+),
+(
+    'l',
+    1000
 ),
 (
     'ml',
@@ -65,7 +73,5 @@ CREATE TABLE rezept_map (
     id SERIAL PRIMARY KEY,
     zutat_id int REFERENCES rezept(id) ON DELETE CASCADE,
     rezept_id int REFERENCES rezept(id) ON DELETE CASCADE,
-    menge int,
-    index int,
-    kommentar text
+    menge int
 )

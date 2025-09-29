@@ -4,522 +4,113 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    
     <link rel="stylesheet" href="/css/icons.css" />
-
+    
     <style>
+        .material-symbols-outlined:hover {
+            cursor: pointer;
+        }
+
         body {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 30px;
-            background-color: white;
-        }
-
-        section {
-            max-width: 400px;
-            margin: 20px auto;
-        }
-
-        select, input {
-            width: 60px;
-        }
-        input.extra, select.extra {
-            width: 250px;
-        }
-
-        .double {
-            display: flex;
-            justify-content: flex-start;
-        }
-        .double :first-child {
-            margin-right: 5px
-        }
-
-        #zutaten {
-            border: 2px solid black;
-        }
-
-        #zutaten .zutat {
-            display: flex;
-            flex-direction: column;
-            border-bottom: 2px black solid;
-        }
-        #zutaten .zutat:last-child {
-            border-bottom: none;
-        }
-
-        #zutaten .zutat .row {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            padding: 10px;
-        }
-
-        #neu {
-            height: 50px;
-            display: flex;
             justify-content: center;
+            flex-direction: column;
             align-items: center;
         }
-        #neu:hover{
-            cursor: pointer;
+
+        table {
+            width: fit-content;
         }
 
-        span.material-symbols-outlined:hover {
-            cursor: pointer;
-            filter: opacity(0.6);
+        table th, table td {
+            padding: 2px 10px;
+            text-align: left;
         }
-
-        #buttons {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-        }
-        button {
-            border-radius: 20px;
-            border: 2px solid black;
-            padding: 2px 13px;
-            margin: 0px 10px;
-            filter: opacity(0.8);
-        }
-        button:hover {
-            filter: brightness(0.9);
-            cursor: pointer;
-        }
-
-
     </style>
 
-    <title> Warenwirtschaft </title>
+    <title> Zutaten </title>
 </head>
 <body>
+    <div style="width: 100%">
+        <a href="/" style="color: black; text-decoration: none"> Zurück </a>
+    </div>
 
-    <main>
+    <h1> Zutaten </h1>
 
-        <h1> Zutat bearbeiten </h1>
-
-        <section>
-            <table>
-                <tr>
-                    <th> Name: </th>
-                    <td> 
-                        <input type="text" class="extra" name="name" id="name" autocomplete="off" title="Name">
-                    </td>
-                </tr>
-                <tr>
-                    <th> Menge: </th>
-                    <td class="double"> 
-                        <input type="number" name="menge" autocomplete="off" title="Menge">
-                        <select name="einheit" title="Einheit"></select>
-                    </td>
-                </tr>
-                <tr>
-                    <th> Kennzeichnungspflichtig (Allergene): </th>
-                    <td> <input type="checkbox" id="allergene"> </td>
-                </tr>
-            </table>
-        </section>
-
-        <h2> Lieferanten: </h2>
-
-        <section id="zutaten">
-            <div class="zutat" id="neu">
-                <span class="material-symbols-outlined" title="Neuen Lieferanten hinzufügen"> add </span>
-            </div>
-        </section>
-
-        <section id="error">
-            <p id="error-message"></p>
-        </section>
-
-        <section>
-            <button id="umwandeln"> Zutat in ein Rezept umwandeln </button>
-        </section>
-
-        <section id="buttons">
-            <button id="speichern" style="background-color: green"> Speichern </button>
-            <button id="abbrechen" style="background-color: orange;"> Abbrechen </button>
-            <button id="loeschen" style="background-color: red;"> Löschen </button>
-        </section>
-        
-    </main>
-
-    
+    <table>
+        <tr>
+            <th> Name: </th>
+            <th> Optionen: </th>
+        </tr>
+        <tr id="neu-tr">
+            <th colspan="2" style="text-align: center;">
+                <span id="neu" class="material-symbols-outlined" title="Neues Rezept hinzufügen"> add </span>
+            </th>
+        </tr>
+    </table>
 
     <template id="template">
-        <div class="zutat">
-
-            <div class="row">
-                <input type="text" class="extra" name="name" title="Name">
-                <span class="bearbeiten material-symbols-outlined" title="Bearbeiten" style="margin-left: 10px"> edit </span>
-                <span class="entfernen material-symbols-outlined" title="Entfernen"> delete </span>
-            </div>
-
-            <div class="row">
-                <div class="double">
-                    <input type="number" name="preis" title="Preis">
-                    <span> € </span>
-                </div>
-                <div class="double">
-                    <input type="number" name="anteil" title="Anteil (als ganze Zahl)">
-                    <span> % </span>
-                </div>
-                <input type="date" style="width: 100px" name="datum" title="Letztes Änderungsdatum des Preises">
-            </div>
-
-            <div class="row">
-                <table style="width: 100%">
-                    <tr>
-                        <th colspan="3"> Nährwertangaben pro 100 g </th>
-                    </tr>
-                    <tr>
-                        <td> Energie </td>
-                        <td>
-                            <input type="number" name="nwa_energie" title="Nährwertangabe Energie">
-                        </td>
-                        <td> kJ </td>
-                    </tr>
-                    <tr>
-                        <td> Fett </td>
-                        <td>
-                            <input type="number" class="short" name="nwa_fett" title="Nährwertangabe Fett">
-                        </td>
-                        <td> g </td>
-                    </tr>
-                    <tr>
-                        <td style="padding-left: 20px"> davon ges. Fettsäuren </td>
-                        <td>
-                            <input type="number" name="nwa_ges_fettsaeuren" title="Nährwertangabe davon ges. Fettsäuren">
-                        </td>
-                        <td> g </td>
-                    </tr>
-                    <tr>
-                        <td> Kohlenhydrate </td>
-                        <td>
-                            <input type="number" name="nwa_kohlenhydrate" title="Nährwertangabe Kohlenhydrate">
-                        </td>
-                        <td> g </td>
-                    </tr>
-                    <tr>
-                        <td style="padding-left: 20px"> davon Zucker </td>
-                        <td>
-                            <input type="number" name="nwa_zucker" title="Nährwertangabe davon Zucker">
-                        </td>
-                        <td> g </td>
-                    </tr>
-                    <tr>
-                        <td> Eiweiß </td>
-                        <td>
-                            <input type="number" name="nwa_eiweiss" title="Nährwertangabe Eiweiß">
-                        </td>
-                        <td> g </td>
-                    </tr>
-                    <tr>
-                        <td> Salz </td>
-                        <td>
-                            <input type="number" name="nwa_salz" title="Nährwertangabe Salz">
-                        </td>
-                        <td> g </td>
-                    </tr>
-                </table>
-            </div>
-
-        </div>
+        <tr>
+            <td class="name"></td>
+            <td class="datum"></td>
+            <td style="text-align: center">
+                <span class="bearbeiten material-symbols-outlined" title="Rezept bearbeiten"> edit </span>
+            </td>
+        </tr>
     </template>
 
     <script>
-        window.onload = () => {
-            let search = new URLSearchParams(location.search)
-            let id = search.get("id")
+        window.onload = async () => {
+            await fillTable()
 
-            fillDaten(id)
-
-            document.getElementById("neu").addEventListener("click", async () => {
-                neueZutat()
-            })
-
-            document.getElementById("speichern").addEventListener("click", e => {
-                speichern(id)
-            })
-
-            document.getElementById("abbrechen").addEventListener("click", e => {
-                abbrechen()
-            })
-
-            document.getElementById("loeschen").addEventListener("click", e => {
-                loeschen(id)
-            })
-
-            document.getElementById("umwandeln").addEventListener("click", e => {
-                umwandeln(id)
+            document.getElementById("neu").addEventListener("click", e => {
+                neu()
             })
         }
 
-        function neueZutat() {
-            cloneTemplate({
-                name: "Neuer Lieferant",
-                anteil: 100,
-                preis: 0.00,
-                datum: new Date().toISOString().split("T")[0],
-                nwa_energie: 0,
-                nwa_fett: 0,
-                nwa_ges_fettsaeuren: 0,
-                nwa_kohlenhydrate: 0,
-                nwa_zucker: 0,
-                nwa_eiweiss: 0,
-                nwa_salz: 0
-            }, false)
-        }
+        async function fillTable() {
+            let res = await fetch("/api/zutat/alle")
 
-        async function fillDaten(id) {
-            if(id == null || isNaN(id)) {
-                return
+            if(res.ok) {
+                let body = await res.json()
+
+                body.zutaten.forEach(r => {
+                    let template = document.getElementById("template")
+                    let t = document.importNode(template.content, true)
+
+                    t.querySelector(".name").innerText = r.name
+                    t.querySelector(".datum").innerText = r.zuletzt_geaendert?.split("-")?.reverse()?.join(".") || "--.--.----"
+                    t.querySelector("tr").id = r.id
+
+                    t.querySelector(".bearbeiten").addEventListener("click", e => {
+                        let tr = e.target.parentElement.parentElement
+                        bearbeiten(tr)
+                    })
+
+                    document.querySelector("table").querySelector("tbody").insertBefore(
+                        t,
+                        document.getElementById("neu-tr")
+                    )
+                })
             }
+        }
 
-            let res = await fetch(`/api/zutat/${id}`, {
-                method: "GET"
+        function bearbeiten(tr) {
+            location.assign(`/zutat/bearbeiten?id=${tr.id}`)
+        }
+
+        async function neu() {
+            let res = await fetch("/api/zutat", {
+                method: "PUT"
             })
 
             if(res.ok) {
                 let body = await res.json()
 
-                if(body.rezept.name.substr(-4) == " (A)") {
-                    body.rezept.name = body.rezept.name.replace(" (A)", "")
-                    document.getElementById("allergene").checked = true
-                }
-
-                document.body.querySelectorAll("section:not(#zutaten) input[name]").forEach(i => {
-                    i.value = body.rezept[i.attributes.name.value]
-                })
-
-                body.einheit.forEach(e => {
-                    let opt = document.createElement("option")
-                    opt.innerText = e.name
-                    opt.value = e.id
-                    
-                    document.querySelector("select[name=einheit]").appendChild(opt)
-                })
-                document.querySelector("select[name=einheit]").value = body.rezept.einheit_id
-
-                body.zutaten.forEach(z => {
-                    cloneTemplate(z, true)
-                })
-            }
-        }
-        
-        function cloneTemplate(daten, disabled) {
-            let t = document.importNode(document.getElementById("template").content, true).firstElementChild
-
-            t.querySelectorAll("input[name]").forEach(i => {
-                i.value = daten[i.attributes.name.value]
-            })
-
-            if(disabled) {
-                t.querySelectorAll("input, select").forEach(i => {
-                    i.disabled = true
-                })
-            }
-            
-            t.querySelector(".entfernen").addEventListener("click", e => {
-                entfernen(e.target.closest(".zutat"))
-            })
-            t.querySelector(".bearbeiten").addEventListener("click", e => {
-                bearbeiten(e.target.closest(".zutat"))
-            })
-            t.querySelector("input[name=preis]").addEventListener("change", e => {
-                e.target.closest(".zutat").querySelector("input[name=datum]").value = new Date().toISOString().split("T")[0]
-            })
-
-            document.getElementById("zutaten").insertBefore(
-                t,
-                document.getElementById("neu")
-            )
-        }
-
-        function bearbeiten(div) {
-            div.querySelectorAll("input, select").forEach(i => {
-                i.disabled = false
-            })
-        }
-
-        function entfernen(div) {
-            document.getElementById("zutaten").removeChild(div)
-        }
-
-        async function speichern(id) {
-            if(id == null || isNaN(id)) {
-                return
-            }
-
-            let input = parseInput()
-
-            if(document.getElementById("allergene").checked) {
-                input.rezept.name += " (A)"
-            }
-
-            let error = returnErrorMessage(input)
-            if(error != null) {
-                status("error", error)
-                console.error(error)
-                return
-            }
-
-            status("clear")
-            console.log(input)
-            
-            let res = await fetch(`/api/zutat/${id}`, {
-                method: "POST",
-                body: JSON.stringify(input),
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            if(res.ok) {
-                status("success", "Zutat wurde erfolgreich gespeichert.")
-                setTimeout( () => {
-                    location.assign("/zutaten")
-                }, 2000)
-            } else {
-                status("error", await res.text())
-            }
-        }
-
-        function parseInput() {
-            let rezept = {}
-            document.querySelectorAll("section:not(#zutaten) [name]").forEach(i => {
-                rezept[i.attributes.name.value] = i.value == "" ? null : i.value || null
-            })
-            rezept.einheit_id = rezept.einheit
-            delete rezept.einheit
-
-            let zutaten = []
-            document.querySelectorAll("#zutaten .zutat:not(#neu)").forEach(zutatElem => {
-                let zutat = {}
-                zutatElem.querySelectorAll("[name]").forEach(i => {
-                    zutat[i.attributes.name.value] = i.value == "" ? null : i.value || null
-                })
-                zutaten.push(zutat)
-            })
-
-            return {
-                rezept,
-                zutaten
-            }
-        }
-
-        function returnErrorMessage(input) {
-            for(let key in input.rezept) {
-                if(input.rezept[key] == null) {
-                    let title = document.querySelector(`section:not(#zutaten) [name=${key}]`).title
-                    return `${title} darf nicht leer sein.`
-                }
-            }
-
-            if(Number(input.rezept.menge) == NaN) {
-                return "Menge muss eine Zahl sein."
-            }
-            if(Number(input.rezept.menge) < 0) {
-                return "Menge darf nicht kleiner als 0 sein."
-            }
-            if(input.zutaten.length < 1) {
-                return "Lieferanten darf nicht leer sein."
-            }
-
-            let anteil = 0
-
-            for(let i=0; i<input.zutaten.length; i++) {
-                let zutat = input.zutaten[i]
-
-                if(zutat.name == null) {
-                    return "Name eines Lieferanten darf nicht leer sein."
-                }
-
-                for(let key in zutat) {
-                    
-                    if(zutat[key] == null) {
-                        let title = document.querySelectorAll(`#template-zutat [name=${key}]`).title
-                        return `${title} des Lieferanten '${zutat.name}' darf nicht leer sein.`
-                    }
-                }
-                
-                if(Number(zutat.anteil) == NaN) {
-                    return `Anteil des Lieferanten '${zutat.name}' muss eine Zahl sein.`
-                }
-                if(Number(zutat.anteil) < 0) {
-                    return `Anteil des Lieferanten '${zutat.name}' darf nicht kleiner als 0 sein.`
-                }
-                if(Number(zutat.anteil) > 100) {
-                    return `Anteil des Lieferanten '${zutat.name}' darf nicht größer als 100 sein.`
-                }
-                anteil += Number(zutat.anteil)
-            }
-
-            if(anteil > 100) {
-                return "Die Anteile der verschiedenen Lieferanten dürfen insgesamt nicht mehr als 100% ergeben."
-            }
-            if(anteil < 90) {
-                return "Die Anteile der verschiedenen Lieferanten müssen insgesamt mehr als 90% ergeben."
-            }
-
-            return null
-        }
-
-        function status(status, text="") {
-            let p = document.getElementById("error-message")
-            
-            if(status == "clear") {
-                p.innerText = null
-            } else if(status == "success") {
-                p.style.color = "green"
-                p.innerText = text
-            } else if(status == "error") {
-                p.style.color = "red"
-                p.innerText = text
-            }
-        }
-
-        function abbrechen() {
-            location.assign("/zutaten")
-        }
-
-        async function loeschen(id) {
-            if(!confirm("Diese Zutat Löschen?")) return
-
-            let res = await fetch(`/api/zutat/${id}`, {
-                method: "DELETE"
-            })
-            if(res.ok) {
-                status("success", "Zutat wurde erfolgreich gelöscht.")
-                setTimeout( () => {
-                    location.assign("/zutaten")
-                }, 2000)
-            } else {
-                status("error", await res.text())
-            }
-        }
-
-        async function umwandeln(id) {
-            let res = await fetch(`/api/zutat/${id}/umwandeln`, {
-                method: "POST"
-            })
-            if(res.ok) {
-                status("success", "Zutat wurde erfolgreich in ein Rezept umgewandelt.")
-                setTimeout( () => {
-                    location.assign(`/rezept/bearbeiten?id=${id}`)
-                }, 2000)
-            } else {
-                status("error", await res.text())
+                location.assign(`/zutat/bearbeiten?id=${body.id}`)
             }
         }
     </script>
-    
 </body>
 </html>
