@@ -5,8 +5,7 @@
   "main": "start.js",
   "scripts": {
     "dev": "nodemon -L start.js",
-    "start": "node ./start.js",
-    "setup": "bash ./setup/default.sh ./.env"
+    "start": "node ./start.js"
   },
   "repository": {
     "type": "git",

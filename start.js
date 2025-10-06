@@ -11,9 +11,9 @@ app.use( require("./routes/routes") )
 
 
 // Start server
-const port = process.env.PORT || 3000
+const port = 80
 const host = "0.0.0.0"
 
 app.listen(port, host, () => {
-    console.log(`Server running at ${process.env.BASE_URL || "https://localhost:" + port}`)
+    console.log("Server running at http://localhost")
 })

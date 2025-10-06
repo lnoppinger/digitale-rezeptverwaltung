@@ -1,11 +1,13 @@
 FROM node:14
 
-COPY package*.json ./
+WORKDIR /workspace
 
-RUN npm install && npm audit fix
+COPY package.json ./
+
+RUN npm install
 
 COPY . ./
 
-EXPOSE 3000
+EXPOSE 80
 
 CMD ["npm", "run", "start"]
