@@ -2,7 +2,7 @@ import express from "express"
 const routes = express() 
 import {updateClients} from "./events.js"
 // import excelJS from "exceljs"
-import {db, rezeptArtTypes, rezeptEinheitTypes} from "../../modules/globals.js"
+import {db, rezeptArtTypes, rezeptEinheitTypes} from "../../globals.js"
 
 routes.get("/liste/:type", async (req, res, next) => {
     try {

@@ -1,6 +1,6 @@
 import express from "express"
 import expressLayouts from "express-ejs-layouts";
-import { rezeptArtMap, rezeptEinheitTypes } from "../modules/globals.js"
+import { rezeptArtMap, rezeptEinheitTypes } from "../globals.js"
 const routes = express() 
 
 routes.set('view engine', 'ejs')

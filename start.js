@@ -1,6 +1,6 @@
 import express from "express"
 import morgan from "morgan"
-import { db } from "./modules/globals.js"
+import { db } from "./globals.js"
 const app = express()
 
 let version

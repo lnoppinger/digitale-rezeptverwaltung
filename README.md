@@ -2,7 +2,7 @@
 ## API
 ### 1 Liste meiner Rezepte / Zutaten / Zwischenrezepte ansehen
 ```
-GET /api/rezept/liste/:art
+GET /api/liste/:art
 
 :art kann folgende Werte annehmen:
 R = Rezepte
@@ -68,4 +68,18 @@ DELETE /api/rezept/:id
 
 :id ist dabei die UUID-v7 des jeweiligen Rezepts / Zutat / Zwischenrezept
 Diese kann mit Punkt API-1 herausgefunden werden
+```
+
+### 5 Rezept Berechnen
+```
+GET /api/rezept/:id/berechnen/:typ
+
+:id ist dabei die UUID-v7 des jeweiligen Rezepts
+Diese kann mit Punkt API-1 herausgefunden werden
+
+:typ kann folgende Werte annehmen:
+zutaten          = Alle Zutaten auflisten
+rezepte          = Alle Zwischenrezepte bis zu den Zutaten auflisten
+preis            = Kalkulieren der einzelnen Zutaten mit Preisen der Lieferanten
+naehrwertangaben = Berechnung der gesamten Nährwertangaben
 ```

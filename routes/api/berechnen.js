@@ -1,5 +1,5 @@
 import express from "express"
-import { db, rezeptEinheitTypes } from "../../modules/globals.js"
+import { db, rezeptEinheitTypes } from "../../globals.js"
 const routes = express() 
 
 routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
