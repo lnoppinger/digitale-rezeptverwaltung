@@ -1,0 +1,54 @@
+<p style="text-align: center;"> Hier existiert noch nichts <br> Füge neue <%= locals.rezeptArtLang %> hinzu. <br> Oben rechts findest du denn + Button.</p>
+
+<%- contentFor('headlineRight') %>
+<div class="flex-row input" style="width: 200px;">
+    <input id="search" type="text" style="position: relative; top: -7px; left: 5px; border: none; outline: none;" placeholder="Suchen...">
+    <button id="search-b" class="material-symbols-outlined" style="width: 25px; height: 20px; border: none; outline: none; margin: 0;"> search </button>
+</div>
+<button id="new"> Neu hinzufügen + </button>
+
+
+<%- contentFor("script") %>
+<script>
+window.onload = async () => {
+    document.getElementById("new").addEventListener("click", async e => {
+        let data = await fetchJSON("/api/rezept", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                art: "<%= locals.rezeptArtKurz %>"
+            })
+        })
+        location.assign("/bearbeiten?id=" + data.id)
+    })
+
+    document.getElementById("search").addEventListener("change", e => {
+        document.querySelectorAll(".elem").forEach(elem => {
+            if(elem.innerText.toLowerCase().includes(e.target.value.toLowerCase()) || e.target.value == "") {
+                elem.style.display = "block"
+            } else {
+                elem.style.display = "none"
+            }
+        })
+    })
+    document.getElementById("search-b").addEventListener("click", e => {
+        document.getElementById("search").dispatchEvent(new Event("change"))
+    })
+    document.getElementById("search").addEventListener("keyup", e => {
+        document.getElementById("search").dispatchEvent(new Event("change"))
+    })
+
+    let data = await fetchJSON("/api/liste/<%= locals.rezeptArtKurz %>")
+    if(data.length > 0) document.querySelector("main").innerHTML = ""
+    document.querySelector("main").append(...data.map(rezept => {
+        let t = document.createElement("a")
+        t.classList.add("elem")
+        t.style.textAlign = "center"
+        t.innerHTML = rezept.name + "<br>" + rezept.datum
+        t.href = `/bearbeiten?id=${rezept.id}`
+        return t
+    }))
+}
+</script>

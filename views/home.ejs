@@ -1,80 +1,56 @@
-<%- include("./partials/head") -%>
-    
-    <style>
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-        }
+<h1> Home </h1>
+<a href="/zutaten">
+    <div>
+        <span> Zutaten </span>
+    </div>
+</a>
+<a href="/zwischenrezepte">
+    <div>
+        <span> Zwischenrezepte </span>
+    </div>
+</a>
+<a href="/rezepte">
+    <div>
+        <span> Rezepte </span>
+    </div>
+</a>
+<a href="/berechnen">
+    <div>
+        <span> Kalkulation </span>
+    </div>
+</a>
+<a href="/drucken">
+    <div>
+        <span> Drucken </span>
+    </div>
+</a>
 
-        a {
-            color: black;
-            text-decoration: none;
-        }
+<%- contentFor("head") %>
+<link rel="shortcut icon" href="icon.png" type="image/x-icon">
+<style>
+    header {
+        display: none;
+    }
+    main {
+        flex-direction: column;
+    }
 
-        div {
-            border: 5px black solid;
-            border-radius: 20px;
-            background-color: lightblue;
-            font-size: 25px;
+    div {
+        border: 5px var(--black) solid;
+        border-radius: 20px;
+        background-color: var(--prim);
+        font-size: 25px;
 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
 
-            width: 300px;
-            height: 70px;
-            margin: 20px;
-        }
-        div:hover {
-            filter: brightness(0.7)
-        }
-    </style>
-    
-    <title>Home</title>
-</head>
-<body>
-
-    <h1> Home </h1>
-
-    <a href="/zutat">
-        <div>
-            <span> Zutaten </span>
-        </div>
-    </a>
-
-    <a href="/rezept">
-        <div>
-            <span> Rezepte </span>
-        </div>
-    </a>
-
-    <a href="/berechnen?berechnungsart=preis">
-        <div>
-            <span> Kalkulation </span>
-        </div>
-    </a>
-
-    <a href="/berechnen?berechnungsart=zutaten">
-        <div>
-            <span> Zutatenliste </span>
-        </div>
-    </a>
-
-    <a href="/berechnen?berechnungsart=naehrwerte">
-        <div>
-            <span> Nährwertangaben </span>
-        </div>
-    </a>
-
-    <a href="/api/rezept/export">
-        <div>
-            <span> Daten exportieren (Excel) </span>
-        </div>
-    </a>
-</body>
-</html>
+        width: 300px;
+        height: 70px;
+        margin: 20px;
+    }
+    div:hover {
+        filter: brightness(0.7)
+    }
+</style>

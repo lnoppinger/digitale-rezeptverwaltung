@@ -1,41 +1,26 @@
-require('dotenv').config()
-
-const express = require('express')
+import express from "express"
+import path from "path"
+import { fileURLToPath } from "url"
 const app = express()
 
-
-// Set Templating Engine
-app.use( require('express-ejs-layouts') )
-app.set('view engine', 'ejs')
-app.set("layout", false)
-
-
-// Parse body
-app.use(express.urlencoded({ extended: true}))
-app.use(express.json())
-
-app.use( require("express-formidable-v2")())
-
-
-// Parse cookies
-app.use( require('cookie-parser')(process.env.COOKIE_SECRET) )
-
-
 // Routing
-app.use("/", require("./render"))
+app.use("/", (await import("./render.js")).default)
 
-app.use("/api/zutat", require("./api/zutat"))
-app.use("/api/rezept", require("./api/rezept"))
-app.use("/api/berechnen",  require("./api/berechnen"))
-
+app.use("/api",  (await import("./api/berechnen.js")).default)
+app.use("/api",  (await import("./api/events.js")).default)
+app.use("/api", (await import("./api/rezept.js")).default)
 
 // static Files
-const path = require('path')
-app.use( '/', express.static( path.join(__dirname, '../public/') ) )
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+app.use("/", express.static(path.resolve(__dirname, "../public")))
+
+// 404
+app.use( (req, res) => {
+    if(!res.headersSent) {
+        res.sendStatus(404)
+    }
+})
 
 
-// Error Handling
-app.use( require("./error") )
-
-
-module.exports = app
+export default app

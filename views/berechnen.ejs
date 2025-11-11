@@ -1,122 +1,71 @@
-<%- include("./partials/head") -%>
+<pre id="result"> Wählen Sie eine Rezept zum Berechnen aus ...</pre>
+
+<%- contentFor("headlineRight") %>
+<input type="text" id="rezept" list="rezepte-liste" style="width: 150px; border-radius: 15px; border: 2px solid black; height: 25px">
+<select id="berechnungsart" style="margin: 0 10px; border-radius: 15px; border: 2px solid black; height: 30px">
+    <option value="rezepte"> Zwischenrezepte anzeigen </option>
+    <option value="zutaten"> Zutatenliste erstellen </option>
+    <option value="preis"> Preis Kalkulieren </option>
+    <option value="naehrwertangaben"> Nährwertangaben erstellen </option>
+</select>
+
+<%- contentFor("head") %> 
+<style>
+    main {
+        overflow-x: scroll
+    }
+</style>
+
+<%- contentFor("bottom") %>
+<datalist id="rezepte-liste"> </datalist>
     
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+<%- contentFor("script") %>
+<script>
+    window.onload = async () => {
+        let zutaten = await fetchJSON("/api/liste/a")
+        document.getElementById("rezepte-liste").innerHTML = ""
+        document.getElementById("rezepte-liste").append(...zutaten.map(zutat => {
+            let elem = document.createElement("option")
+            elem.dataset.id = zutat.id
+            elem.value = zutat.name
+            return elem
+        }))
+
+        let search = new URLSearchParams(location.search)
+        if(search.has("id")) {
+            let elem = document.querySelector(`#rezepte-liste option[data-id='${search.get("id")}']`)
+            if(elem == null) return
+            document.getElementById("rezept").value = elem.value
+            document.getElementById("rezept").dispatchEvent(new Event("change"))
+            search.delete("id")
+            history.replaceState(history.state, '', window.location.pathname + search.toString())
         }
 
-        pre {
-            max-width: calc(100vw - 100px);
-            margin: 50px;
-            overflow-x: auto;
+    }
 
+    document.getElementById("back").href = "/rezepte"
+    document.getElementById("berechnungsart").addEventListener("change", e => {
+        document.getElementById("rezept").dispatchEvent(new Event("change"))
+    })
+    document.getElementById("rezept").addEventListener("change", async e => {
+        let id = document.querySelector(`#rezepte-liste option[value='${e.target.value}']`)?.dataset?.id
+        let berechnungsart = document.getElementById("berechnungsart").value
+        let data = await fetchJSON(`/api/rezept/${id}/berechnen/${berechnungsart}`, {
+            method: "GET"
+        }, (res, e) => {
+            if(res.status == 400) {
+                document.getElementById("result").innerText = e.message
+                document.getElementById("result").style.color = "darkred"
+                return true
+            } else if(res.status == 404) {
+                document.getElementById("result").innerText = "Das asgewählte Rezept konnte nicht gefunden werden."
+                document.getElementById("result").style.color = "darkred"
+                return true
+            }
+        })
+        if(data != null) {
+            document.getElementById("result").innerText = data
+            document.getElementById("result").style.color = "black"
         }
-    </style>
-
-    <title> Berechnen </title>
-</head>
-<body>
-    <div style="width: 100%">
-        <a href="/" style="color: black; text-decoration: none"> Zurück </a>
-    </div>
-
-    <h1> Berechnen </h1>
-
-    <section>
-        <input type="text" id="rezept" list="rezepte-liste">
-        <select id="berechnungsart" style="margin: 0 10px">
-            <option value="rezept"> Alle Rezepte anzeigen </option>
-            <option value="zutaten"> Zutatenliste erstellen </option>
-            <option value="preis"> Preis Kalkulieren </option>
-            <option value="naehrwerte"> Nährwertangabe erstellen </option>
-        </select>
-        <button id="start"> Starten </button>
-    </section>
-
-    <section>
-        <pre id="ergebnis"> </pre>
-    </section>
-
-    <datalist id="rezepte-liste"> </datalist>
-    
-    <script>
-        window.onload = async () => {
-            await fillListe()
-
-            let search = new URLSearchParams(location.search)
-            if(search.has("berechnungsart")) {
-                document.getElementById("berechnungsart").value = search.get("berechnungsart")
-            }
-
-            document.getElementById("start").addEventListener("click", e => {
-                start()
-            })
-
-            setResult("Bitte wählen Sie ein Rezept zum Berechnen aus.", "normal")
-        }
-
-        async function fillListe() {
-            let res = await fetch("/api/rezept/alle")
-
-            if(res.ok) {
-                let body = await res.json()
-
-                body.rezepte.forEach( r => {
-                    let opt = document.createElement("option")
-                    opt.value = r.name
-                    opt.dataset.json = encodeURI(JSON.stringify(r))
-
-                    document.getElementById("rezepte-liste").appendChild(opt)
-                })
-            }
-        }
-
-        async function start() {
-            let name = document.getElementById("rezept").value
-            
-            let id = -1
-            for(let opt of document.getElementById("rezepte-liste").children) {
-                let json = JSON.parse( decodeURI(opt.dataset.json) )
-
-                if(json.name == name) {
-                    id = json.id
-                }
-            }
-
-            if(id < 0) {
-                setResult(`Ein Rezept mit dem Namen '${name}' existiert nicht`, "error") 
-                return
-            }
-
-            let berechnungsart = document.getElementById("berechnungsart").value || "rezept"
-
-            let res = await fetch(`/api/berechnen/${id}/${berechnungsart}`)
-
-            if(res.ok) {
-                let body = await res.text()
-
-                setResult(body, "normal")
-            } else {
-                let body = await res.text()
-
-                setResult(body, "error")
-            }
-
-        }
-
-        function setResult(text, status) {
-            let p = document.getElementById("ergebnis")
-            if(status == "normal") {
-                p.style.color = "black"
-            } else if(status == "success") {
-                p.style.color = "green"
-            } else if(status == "error") {
-                p.style.color = "red"
-            }
-            p.innerText = text
-        }
-    </script>
-</body>
-</html>
+    })
+</script>

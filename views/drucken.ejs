@@ -1,0 +1,184 @@
+<section>
+    <p>
+        Oben rechts können Sie das Rezept auswählen, welches gedruckt werden soll. <br>
+        Die Druckansicht wird im anschluss automatisch gestartet. <br> <br>
+        Falls das nicht passiert, drücken sie auf 'Drucken'. <br>
+    </p>
+    <button id="print"> Drucken </button>
+</section>
+
+<section id="s-print">
+    <div style="width: 40%;">
+        <h1 class="name" ></h1>
+        <p> Rezept für 
+            <span class="menge-g" ></span> | 
+            <span class="menge-ml"></span> | 
+            <span class="menge-st"></span> Stück  
+        </p>
+        <h2> Nährwertangaben </h2>
+        <table>
+            <tr>
+                <td> Kalorien </td>
+                <td style="text-align: right;"> <span class="nwa-kcal"></span>kcal | <span class="nwa-kj"></span>kJ</td>
+            </tr>
+            <tr>
+                <td> Fett </td>
+                <td style="text-align: right;"> <span class="nwa-fett"></span>g</td>
+            </tr>
+            <tr>
+                <td> davon gesättigte Fettsäuren </td>
+                <td style="text-align: right;"> <span class="nwa-gesfett"></span>g</td>
+            </tr>
+            <tr>
+                <td> Kohlenhydrate</td>
+                <td style="text-align: right;"> <span class="nwa-kohlen"></span>g</td>
+            </tr>
+            <tr>
+                <td> davon Zucker </td>
+                <td style="text-align: right;"> <span class="nwa-zucker"></span>g</td>
+            </tr>
+            <tr>
+                <td> Eiweiß </td>
+                <td style="text-align: right;"> <span class="nwa-eiweiss"></span>g</td>
+            </tr>
+            <tr>
+                <td> Salz </td>
+                <td style="text-align: right;"> <span class="nwa-salz"></span>g</td>
+            </tr>
+        </table>
+    </div>
+    <div style="width: 40%; position: relative;">
+        <span style="position: absolute; top: 0px; right: 40px; font-size: 13px;"> Digitale </span>
+        <img src="/icon.png" style="position: absolute; right: 0; height: 70px;">
+        <span style="position: absolute; top: 68px; right: 0px; font-size: 13px;"> Rezeptverwaltung </span>
+        <span style="position: absolute; top: 80px; right: 0px; font-size: 10px;"> von LNoppinger.de </span>
+        <h2>Zutaten</h2>
+        <table class="zutaten" style="border-spacing: 10px 0px;"></table>
+    </div>
+    <div style="width: 90%;">
+        <h2 style="text-align: center;">Zubereitung</h2>
+        <p class="text"></p>
+    </div>
+</section>
+
+<%- contentFor("head") %>
+<style>
+    #s-print {
+        display: none;
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: start;
+        flex-wrap: wrap;
+        --white: white;
+        --black: black;
+        background-color: white;
+    }
+    #s-print h2 {
+        margin-top: 70px;
+    }
+    @media print {
+        section, header {
+            display: none;
+        }
+        #s-print {
+            display: flex;
+        }
+        body {
+            background-color: white;
+        }
+    }
+</style>
+
+<%- contentFor("headlineRight") %>
+<input type="text" id="rezept" list="rezepte-liste">
+
+<%- contentFor("bottom") %>
+<datalist id="rezepte-liste"> </datalist>
+    
+<%- contentFor("script") %>
+<script>
+    window.onload = async () => {
+        let zutaten = await fetchJSON("/api/liste/a")
+        document.getElementById("rezepte-liste").innerHTML = ""
+        document.getElementById("rezepte-liste").append(...zutaten.map(zutat => {
+            let elem = document.createElement("option")
+            elem.dataset.id = zutat.id
+            elem.value = zutat.name
+            return elem
+        }))
+
+        let search = new URLSearchParams(location.search)
+        if(search.has("id")) {
+            let elem = document.querySelector(`#rezepte-liste option[data-id='${search.get("id")}']`)
+            if(elem == null) return
+            document.getElementById("rezept").value = elem.value
+            document.getElementById("rezept").dispatchEvent(new Event("change"))
+            search.delete("id")
+            history.replaceState(history.state, '', window.location.pathname + search.toString())
+        }
+
+    }
+
+    document.getElementById("back").href = "/rezepte"
+
+    document.getElementById("print").addEventListener("click", e => {
+        window.print()
+    })
+    
+    document.getElementById("rezept").addEventListener("change", async e => {
+        let id = document.querySelector(`#rezepte-liste option[value='${e.target.value}']`)?.dataset?.id
+        let berechnungRes = await fetch(`/api/rezept/${id}/berechnen/json`)
+        let rezeptRes     = await fetch(`/api/rezept/${id}`)
+
+        if(!berechnungRes.ok && !rezeptRes.ok ) {
+            if((berechnungsRes.status == 404 || rezeptRes.status == 404)) {
+                alert("Es konnte kein Rezept mit diesem Namen gefunden werden")
+            } else if(berechnungRes.status == 400) {
+                alert(await berechnungRes.text())
+            } else if(rezeptRes.status == 400) {
+                alert(await rezeptRes.text())
+            } else {
+                alert("Hier ist etwas schief gelaufen bitte versuchen Sie es erneut.")
+            }
+            return
+        }
+
+        let berechnung = await berechnungRes.json()
+        let rezept     = await rezeptRes.json()
+
+        document.querySelector("#s-print .name"       ).innerText = rezept.name
+        document.querySelector("#s-print .menge-g"    ).innerText = (rezept.menge.g  > 10000) ? (rezept.menge.kg + "kg") : (rezept.menge.g  + "g" )
+        document.querySelector("#s-print .menge-ml"   ).innerText = (rezept.menge.ml > 10000) ? (rezept.menge.l  + "L" ) : (rezept.menge.ml + "ml")
+        document.querySelector("#s-print .menge-st"   ).innerText = rezept.menge.st
+        document.querySelector("#s-print .nwa-kcal"   ).innerText = berechnung.naehrwertangaben.kcal
+        document.querySelector("#s-print .nwa-kj"     ).innerText = berechnung.naehrwertangaben.kj
+        document.querySelector("#s-print .nwa-fett"   ).innerText = berechnung.naehrwertangaben.fett
+        document.querySelector("#s-print .nwa-gesfett").innerText = berechnung.naehrwertangaben.gesfettsaeuren
+        document.querySelector("#s-print .nwa-kohlen" ).innerText = berechnung.naehrwertangaben.kohlenhydrate
+        document.querySelector("#s-print .nwa-zucker" ).innerText = berechnung.naehrwertangaben.zucker
+        document.querySelector("#s-print .nwa-eiweiss").innerText = berechnung.naehrwertangaben.eiweiss
+        document.querySelector("#s-print .nwa-salz"   ).innerText = berechnung.naehrwertangaben.salz
+        for(let name in berechnung.zutaten) {
+            let menge = berechnung.zutaten[name]
+            let trElem = document.createElement("tr")
+            trElem.innerHTML  = `<td>${menge.g  > 10000? Math.round(menge.g  / 1000) + "kg" : Math.round(menge.g ) + "g" }</td>`
+            trElem.innerHTML += `<td>${menge.ml > 10000? Math.round(menge.ml / 1000) + "L"  : Math.round(menge.ml) + "ml"}</td>`
+            trElem.innerHTML += `<td>${menge.st} St.</td><td>${name}</td>`
+            document.querySelector("#s-print .zutaten").appendChild(trElem)
+        }
+        let textElem = document.querySelector("#s-print .text")
+        textElem.innerText = rezept.text
+        rezept.zutaten.forEach( (zutat, i) => {
+            if(zutat.einheit == "ST") {
+                zutat.einheit = "St"
+            } else {
+                zutat.einheit = zutat.einheit.toLowerCase()
+            }
+            textElem.innerText = textElem.innerText.replace("$" + String(i), zutat.menge + zutat.einheit + " " + zutat.name)
+        })
+        textElem.innerText = textElem.innerText.replace(/\$[0-9]*/, "")
+
+        window.print()
+    })
+</script>

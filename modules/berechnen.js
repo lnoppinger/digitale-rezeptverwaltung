@@ -1,7 +1,6 @@
-require("dotenv").config()
-const db = require("./db")
+import {db} from "./globals.js"
 
-module.exports = main
+export default main
 
 let berechnenKeys = [
     "preis",

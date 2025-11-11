@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+
+    <style>
+        @font-face {
+            font-family: "Material Symbols Outlined";
+            font-style: normal;
+            font-weight: 100 700;
+            src: url("/material-symbols-outlined.woff2") format("woff2");
+        }
+
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--white);
+            --prim: lightblue;
+            --white: white;
+            --black: black;
+        }
+        header, main {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: max(10px, 3vmin);
+        }
+        header {
+            background-color: var(--prim);
+        }
+        .flex-center {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+        input, select, button, .input {
+            background: transparent;
+            border: 2px solid var(--black);
+            border-radius: 15px;
+            outline: none;
+            color: var(--black);
+            height: 26px;
+            width: 150px;
+            margin: 5px;
+        }
+       
+        input[type=checkbox] {
+            width: 30px;
+        }
+        input[type=number] {
+            width: 70px;
+            text-align: right;
+        }
+        select, button {
+            height: 30px;
+        }
+        button {
+            cursor: pointer;
+        }
+        option {
+            background-color: var(--white);
+        }
+
+
+        a, p, div, span, h1, h2, label {
+            color: var(--black);
+            text-decoration: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                --prim: #075670;
+                --white: #111111;
+                --black: #eeeeee;
+            }
+        }
+    </style>
+
+    <%- defineContent("head") %>
+
+    <title> Digitale Rezeptverwaltung </title>
+</head>
+<body>
+    <header>
+        <a id="back" href="/" class="flex-center">
+            <span class="material-symbols-outlined"> arrow_back </span>
+            <span style="margin-left: 10px;">Zurück</span>
+        </a>
+        <h1 style="width: 50%; text-align: center;"> <%= locals.headline %> </h1>
+        <div class="flex-center">
+            <%- defineContent("headlineRight") %>
+        </div>
+    </header>
+
+    <main> <%- body %> </main>
+
+    <%- defineContent("bottom") %>
+
+<script>
+let eventSource
+let reload = true
+let autoReloadFailures = 2
+function activateAutoReload() {
+    eventSource = new EventSource("/api/events",  {
+        withCredentials: true
+    })
+    eventSource.onmessage = async (e) => {
+        if(e.data == "update" && reload) window.onload()
+    }
+    eventSource.onerror = () => {
+        eventSource.close()
+        autoReloadFailures++
+        
+        let retryTimeOut = Math.min(60*60, Math.pow(autoReloadFailures, 2))
+        console.log(`AutoReload failed, retry in ${retryTimeOut} s.`)
+        setTimeout(activateAutoReload, retryTimeOut*1000)
+    }
+}
+activateAutoReload()
+window.onbeforeunload = eventSource?.close
+
+async function fetchJSON(url, options, errorCallback) {
+    let res
+    try {
+        res = await fetch(url, options)
+        if(!res.ok) throw Error(await res.text())
+        let body = await res.text()
+        try {
+            return JSON.parse(body)
+        } catch(e) {
+            return body
+        }
+        
+    } catch(e) {
+        let ecbData = true
+        if(errorCallback != null) ecbData = errorCallback(res, e)
+        if(errorCallback != null && ecbData) return
+        alert("Hier ist etwas schief gelaufen bitte versuchen Sie es erneut.")
+        throw Error(e)
+    }
+}
+</script>
+
+    <%- defineContent("script") %>
+</body>

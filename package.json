@@ -1,6 +1,6 @@
 {
-  "name": "warenwirtschaft",
-  "version": "1.0.0",
+  "name": "digitale-rezeptverwaltung",
+  "version": "2.0.0",
   "description": "",
   "main": "start.js",
   "scripts": {
@@ -9,31 +9,32 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lnoppinger/warenwirtschaft.git"
+    "url": "git+https://github.com/lnoppinger/digitale-rezeptverwaltung.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/lnoppinger/warenwirtschaft/issues"
+    "url": "https://github.com/lnoppinger/digitale-rezeptverwaltung/issues"
   },
-  "homepage": "https://github.com/lnoppinger/warenwirtschaft#readme",
+  "homepage": "https://github.com/lnoppinger/digitale-rezeptverwaltung#readme",
   "dependencies": {
     "cookie-parser": "^1.4.6",
-    "dotenv": "^10.0.0",
+    "dotenv": "^17.2.3",
     "ejs": "^3.1.6",
     "exceljs": "^4.3.0",
-    "express": "^4.17.1",
+    "express": "^5.1.0",
     "express-ejs-layouts": "^2.5.1",
     "express-formidable-v2": "^2.2.1",
     "morgan": "^1.10.0",
-    "pg-promise": "^10.11.1"
+    "pg-promise": "^12.2.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^3.1.10"
   },
   "nodeWinInstaller": {
     "db": {
       "init_file": "./.devcontainer/db/init.sql"
     }
-  }
+  },
+  "type": "module"
 }

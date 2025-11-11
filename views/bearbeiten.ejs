@@ -1,0 +1,441 @@
+<section id="s-allgemein">
+    <h2> Allgemein: </h2>
+    <label> Name <input name="name" type="text"> </label>
+    <label> 
+        Art
+        <select name="art">
+            <% for(let key in locals.rezeptArtMap) { %>
+                <option value="<%= key %>"> <%= locals.rezeptArtMap[key] %> </option>
+            <% } %>
+        </select>
+    </label>
+    <label id="allergen"> Kennzeichnungspflichtiges Allergen <input name="allergen" type="checkbox"></label>
+    <label> Löschen <button id="delete"> Für immer Löschen </button></label>
+</section>
+
+<section id="s-menge">
+    <h2> Menge: </h2>
+    <label> in g     <input name="menge_g"  type="number"></label>
+    <label> in mL    <input name="menge_ml" type="number"></label>
+    <label> in Stück <input name="menge_st" type="number"></label>
+</section>
+
+<section id="s-rezept" style="width: min( calc(99vw - 60px), 750px);">
+    <div class="pair">
+        <h2> Zubereitung: </h2>
+        <button id="neue-zutat"> Zutat hinzufügen </button>
+    </div>
+    <div id="editor" contenteditable="true">Hier die Zutaten einfügen und in den Text einbetten.
+Die gelben Zutatenblöcke können an die richtige Position geschoben werden.</div>
+</section>
+
+<section id="s-naehrwertangaben">
+    <h2> Nährwertangaben pro Menge:</h2>
+    <label> kcal                        <input name="nwa_kcal"    type="number"></label>
+    <label> kJ                          <input name="nwa_kj"      type="number"></label>
+    <label> Fett                        <input name="nwa_fett"    type="number"></label>
+    <label> davon gesättigte Fettsäuren <input name="nwa_gesfett" type="number"></label>
+    <label> Kohlenhydrate               <input name="nwa_kohlen"  type="number"></label>
+    <label> davon Zucker                <input name="nwa_zucker"  type="number"></label>
+    <label> Eiweiss                     <input name="nwa_eiweiss" type="number"></label>
+    <label> Salz                        <input name="nwa_salz"    type="number"></label>
+</section>
+
+<section id="s-lieferanten">
+    <div class="pair">
+        <h2> Eingekauft bei:</h2>
+        <button id="neuer-lieferant"> Lieferant hinzufügen </button>
+    </div>
+    <div id="lieferanten"> </div>
+</section>
+
+
+<%- contentFor("head") %>
+<style>
+    main {
+        align-items: start;
+        margin: 0;
+    }
+    section {
+        width: 350px;
+        padding: 20px 25px;
+    }
+    label, .pair{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    #editor {
+        border: 1px solid var(--black);
+        padding: 10px;
+        min-height: 120px;
+        white-space: pre-wrap;
+        touch-action: none;
+    }
+
+    #editor .zutat {
+        display: inline-block;
+        padding: 2px 6px;
+        background: var(--prim);
+        border-radius: 4px;
+        cursor: grab;
+        user-select: none;
+        width: max-content;
+        white-space: nowrap;
+        margin-left: 4px;
+    }
+
+    #lieferanten > div {
+        position: relative;
+        width: 300px;
+    }
+    #lieferanten .loeschen {
+        position: absolute;
+        left: 305px;
+        top: 60px;
+        outline: none;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    dialog:open {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        background-color: #000000dd;
+    }
+    dialog:open .inner {
+        background-color: var(--white);
+        border-radius: 20px;
+        border: 2px var(--black) solid;
+        padding: 20px;
+        position: relative;
+        width: 300px;
+    }
+
+</style>
+
+<%- contentFor('headlineRight') %>
+<div style="display: flex; justify-content: space-between; flex-direction: row; width: 100px;">
+    <a id="print"     href="/drucken"   class="material-symbols-outlined" style="font-size: 35px;"> print </a>
+    <a id="calculate" href="/berechnen" class="material-symbols-outlined" style="font-size: 35px;"> calculate </a>
+</div>
+
+
+<%- contentFor("bottom") %>
+<template id="lieferant">
+    <div style="margin-bottom: 30px;">
+        <label> Name                 <input name="lieferant.name"   type="text" value="Neuer Lieferant"> </label>
+        <label> Anteil               <input name="lieferant.anteil" type="number" value="1"> </label>
+        <label> Preis pro Menge      <input name="lieferant.preis"  type="number" value="0.00"> </label>
+        <label> Zuletzt aktualisiert <input name="lieferant.datum"  type="date"> </label>
+        <button class="material-symbols-outlined loeschen"> delete </button>
+    </div>
+</template>
+
+<dialog id="neue-zutat-dialog">
+    <div class="inner">
+        <button class="material-symbols-outlined" id="dialog-close" style="border: none;margin-left: 270px; margin-bottom: 15px; width: 35px;"> close </button>
+        <label> Name der Zutat <input type="text" name="zutat.name" list="zutaten-liste"></label>
+        <label> Menge
+            <input type="number" name="zutat.menge" style="margin-left: 70px;">
+            <select name="zutat.einheit" style="width: 50px;">
+            <% for(let key of locals.rezeptEinheitTypes) { %>
+                <option value="<%= key %>"> <%= key %> </option>
+            <% } %>
+            </select>
+        </label>
+        <button id="neue-zutat-hinzufuegen" style="margin-left: 70px; margin-top: 20px;"> Zutat hinzufügen </button>
+    </div>
+</dialog>
+
+<template id="zutat">
+    <span contenteditable="false" class="zutat"></span>
+</template>
+
+<datalist id="zutaten-liste"></datalist>
+
+<%- contentFor("script") %>
+<script>
+let id = (new URLSearchParams(window.location.search)).get("id")
+let rezeptArtMap = JSON.parse('<%- JSON.stringify(locals.rezeptArtMap) %>')
+
+window.onload = async () => {
+    let zutaten = await fetchJSON("/api/liste/a")
+    document.getElementById("zutaten-liste").innerHTML = ""
+    document.getElementById("zutaten-liste").append(...zutaten.map(zutat => {
+        let elem = document.createElement("option")
+        elem.dataset.id = zutat.id
+        elem.value = zutat.name
+        return elem
+    }))
+
+    let data = await fetchJSON(`/api/rezept/${id}`, {
+        method: "GET"
+    }, (res, e) => {
+        if(res.status == 404) {
+            alert("Es existiert keine Zutat / Rezept / Zwischenrezept mit dieser id.")
+            document.getElementById("back").click()
+            return true
+        }
+    })
+    document.querySelector("[name=name]").value = data.name
+    document.querySelector("[name=art]").value = data.art
+    document.querySelector("[name=allergen]").checked = data.allergen
+    document.querySelector("[name='menge_g']").value = data.menge.g
+    document.querySelector("[name='menge_ml']").value = data.menge.ml
+    document.querySelector("[name='menge_st']").value = data.menge.st
+    document.querySelector("[name='nwa_kcal']").value = data.naehrwertangaben.kcal
+    document.querySelector("[name='nwa_kj']").value = data.naehrwertangaben.kj
+    document.querySelector("[name='nwa_fett']").value = data.naehrwertangaben.fett
+    document.querySelector("[name='nwa_gesfett']").value = data.naehrwertangaben.gesfettsaeuren
+    document.querySelector("[name='nwa_kohlen']").value = data.naehrwertangaben.kohlenhydrate
+    document.querySelector("[name='nwa_zucker']").value = data.naehrwertangaben.zucker
+    document.querySelector("[name='nwa_eiweiss']").value = data.naehrwertangaben.eiweiss
+    document.querySelector("[name='nwa_salz']").value = data.naehrwertangaben.salz
+
+    let text = data.text
+    data.zutaten.forEach( (data, i) => {
+        let elem = document.importNode(document.getElementById("zutat").content, true).firstElementChild
+        let name = data.name
+        delete data.name
+        elem.innerText = data.menge + data.einheit.toLowerCase() + " " + name
+        elem.dataset.json = JSON.stringify(data)
+        text = text.replace("$" + String(i), elem.outerHTML)
+    })
+    let elem = document.importNode(document.getElementById("zutat").content, true).firstElementChild
+    elem.innerText = "gelöschte Zutat"
+    text = text.replace(/\$[0-9]*/, elem.outerHTML)
+    editor.innerHTML = text
+    document.querySelectorAll(".zutat").forEach(zutat => {
+        zutat.addEventListener("pointerdown" , e => {
+            if(!e.target.classList.contains("zutat")) return
+            e.preventDefault()
+            e.target.classList.add("a")
+        })
+    })
+
+    document.getElementById("lieferanten").innerHTML = ""
+    document.getElementById("lieferanten").append(...data.lieferanten.map(lieferant => {
+        let elem = document.importNode(document.getElementById("lieferant").content, true).firstElementChild
+        elem.querySelector("[name='lieferant.name']"  ).value = lieferant.name
+        elem.querySelector("[name='lieferant.anteil']").value = lieferant.anteil
+        elem.querySelector("[name='lieferant.preis']" ).value = lieferant.preis.replace(",", ".")
+        elem.querySelector("[name='lieferant.datum']" ).value = lieferant.datum.split(".").reverse().join("-")
+        return elem
+    }))
+    document.querySelectorAll(".loeschen").forEach(elem => {
+        elem.addEventListener("click" , e => {
+            e.target.parentElement.remove()
+            document.getElementById("lieferanten").dispatchEvent(new Event("change", {bubbles: true}))
+        })
+    })
+
+    document.getElementById("s-rezept"           ).style.display = data.art == "Z" ? "none" : "block"
+    document.getElementById("s-naehrwertangaben" ).style.display = data.art == "Z" ? "block" : "none"
+    document.getElementById("s-lieferanten"      ).style.display = data.art == "Z" ? "block" : "none"
+    document.getElementById("print"              ).style.display = data.art == "R" ? "block" : "none"
+    document.getElementById("calculate"          ).style.display = data.art == "R" ? "block" : "none"
+    document.getElementById("allergen"           ).style.opacity = Number(data.art == "Z")
+    document.getElementById("back").href = "/" + rezeptArtMap[data.art].toLowerCase()
+}
+
+document.addEventListener("change", async e => {
+    if(e.target == document || e.target.closest("dialog")) return
+    reload = false
+    
+    let zutaten = []
+    let editorSave = editor.cloneNode(true)
+    editorSave.innerHTML = editorSave.innerHTML.replace(/\$[0-9]*/, "")
+    zutatenElems = editorSave.querySelectorAll("span")
+    for(let i=0; i<zutatenElems.length; i++) {
+        let zutat = zutatenElems[i]
+        if(zutat.dataset.json == null) {
+            alert("Im Rezepttext sind überreste von gelöschten Zutaten. Bitte entfernen Sie diese.")
+            return
+        }
+        zutaten.push(JSON.parse(zutat.dataset.json))
+        zutat.outerHTML = "$" + String(i)
+    }
+    let lieferanten = []
+    document.querySelectorAll("#lieferanten > div").forEach(lieferant => {
+        lieferanten.push({
+            name: lieferant.querySelector("[name='lieferant.name']").value,
+            anteil: lieferant.querySelector("[name='lieferant.anteil']").valueAsNumber,
+            preis: lieferant.querySelector("[name='lieferant.preis']").valueAsNumber.toFixed(2).replace(".", ","),
+            datum: lieferant.querySelector("[name='lieferant.datum']").value.split("-").reverse().join(".")
+        })
+    })
+
+    await fetchJSON("/api/rezept", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            id,
+            name: document.querySelector("[name=name]").value,
+            art: document.querySelector("[name=art]").value,
+            allergen: document.querySelector("[name=allergen]").checked,
+            menge : {
+                g: document.querySelector("[name='menge_g']").value,
+                ml: document.querySelector("[name='menge_ml']").value,
+                st: document.querySelector("[name='menge_st']").value
+            },
+            naehrwertangaben: {
+                kcal: document.querySelector("[name='nwa_kcal']").value,
+                kj: document.querySelector("[name='nwa_kj']").value,
+                fett: document.querySelector("[name='nwa_fett']").value,
+                gesfettsaeuren: document.querySelector("[name='nwa_gesfett']").value,
+                kohlenhydrate: document.querySelector("[name='nwa_kohlen']").value,
+                zucker: document.querySelector("[name='nwa_zucker']").value,
+                eiweiss: document.querySelector("[name='nwa_eiweiss']").value,
+                salz: document.querySelector("[name='nwa_salz']").value
+            },
+            text: editorSave.innerText,
+            zutaten,
+            lieferanten
+        })
+    }, (res, e) => {
+        if(res.status == 400) {
+            alert(e.message + "\n\nBitte passen Sie die Daten an und versuchen Sie es erneut.")
+            return true
+        }
+    })
+
+    reload = true
+    window.onload()
+})
+
+document.getElementById("print").href += "?id=" + id
+document.getElementById("calculate").href += "?id=" + id
+
+document.getElementById("delete").addEventListener("click", async e => {
+    if(!confirm("Sind Sie sicher?\nDas Löschen kann nicht mehr rückgängig gemacht weren.")) return
+    await fetchJSON("/api/rezept/"+id, {
+        method: "DELETE"
+    })
+    document.getElementById("back").click()
+})
+
+let dialog = document.getElementById("neue-zutat-dialog")
+document.getElementById("neue-zutat").addEventListener("click", e => {
+    dialog.open = true
+    dialog.querySelector("[name='zutat.name']").value = "",
+    dialog.querySelector("[name='zutat.menge']").value = "100"
+})
+dialog.addEventListener("click", e => {
+    if(e.target == dialog) dialog.open = false
+})
+document.getElementById("dialog-close").addEventListener("click", e => {
+    dialog.open = false
+})
+document.getElementById("neue-zutat-hinzufuegen").addEventListener("click", e => {
+    let elem = document.importNode(document.getElementById("zutat").content, true).firstElementChild
+    let name = dialog.querySelector("[name='zutat.name']").value
+    if(name == null) return
+
+    let data = {
+        id: document.querySelector(`#zutaten-liste option[value='${name}']`)?.dataset?.id,
+        menge: dialog.querySelector("[name='zutat.menge']").valueAsNumber,
+        einheit: dialog.querySelector("[name='zutat.einheit']").value
+    }
+    if(data.id == null || data.menge == null || data.einheit == null) return
+
+    elem.innerText = data.menge + data.einheit.toLowerCase() + " " + name
+    elem.dataset.json = JSON.stringify(data)
+
+    editor.appendChild(elem)
+    dialog.open = false
+    editor.dispatchEvent(new Event("change", {bubbles: true}))
+})
+
+const editor = document.getElementById("editor")
+editor.addEventListener("pointerup", e => {
+    e.preventDefault()
+    if(editor.querySelector(".zutat.a") == null) return
+    editor.querySelector(".zutat.a").classList.remove("a")
+    editor.dispatchEvent(new Event("change", {bubbles: true}))
+})
+let timeout
+editor.addEventListener("keyup", e => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => editor.dispatchEvent(new Event("change", {bubbles: true})), 1500)
+})
+editor.addEventListener("keydown", e => {
+    if (e.key != "Enter") return
+    e.preventDefault()
+
+    // Füge "\n" an Cursorposition ein
+    const sel = window.getSelection()
+    const range = sel.getRangeAt(0)
+
+    const newline = document.createTextNode("\n")
+    range.insertNode(newline)
+
+    // Cursor nach dem Zeilenumbruch setzen
+    range.setStartAfter(newline)
+    range.setEndAfter(newline)
+    sel.removeAllRanges()
+    sel.addRange(range)
+
+    editor.normalize()
+})
+editor.addEventListener("pointermove", e => {
+    e.preventDefault()
+    if (editor.querySelector(".zutat.a") == null) return
+
+    // Text unter Cursor finden
+    editor.normalize()
+    let range = document.caretRangeFromPoint(e.clientX, e.clientY)
+    if(
+        range.startContainer == editor ||
+        !editor.contains(range.startContainer) ||
+        range.startContainer.tagName == "SPAN" ||
+        range.startContainer.parentElement.tagName == "SPAN"
+    ) return
+    let aktuelleZutat = editor.querySelector(".zutat.a")
+
+    // Nächstgelegene Position suchen
+    let posP = range.startOffset
+    let posM = range.startOffset
+    let index = -1
+    while(index < 0) {
+        if(posP >= range.startContainer.length) index = range.startContainer.length
+        if([" ", ",", ".", ";", ":", "\n"].includes(range.startContainer.textContent.charAt(posP))) index = posP
+
+        if(posM <= 0) index = 0
+        if([" ", ",", ".", ";", ":", "\n"].includes(range.startContainer.textContent.charAt(posM))) index = posM
+        if(range.startContainer.textContent.charAt(posM) == "\n" && range.startContainer.textContent.charAt(posM-1) != "\n" && e.offsetX < 20) index++
+
+        posM--
+        posP++
+    }
+
+    // Einfuegen
+    if(index >= range.startContainer.length) {
+        editor.insertBefore(aktuelleZutat, range.startContainer.nextSibling)
+    } else {
+        range.setStart(range.startContainer, index)
+        range.setEnd(range.startContainer, index)
+        range.insertNode(aktuelleZutat)
+    }
+})
+
+document.getElementById("neuer-lieferant").addEventListener("click", e => {
+    let elem = document.importNode(document.getElementById("lieferant").content, true).firstElementChild
+    elem.querySelector("[name='lieferant.datum']").value = (new Date()).toISOString().substring(0, 10)
+    document.getElementById("lieferanten").appendChild(elem)
+    editor.dispatchEvent(new Event("change", {bubbles: true}))
+})
+</script>

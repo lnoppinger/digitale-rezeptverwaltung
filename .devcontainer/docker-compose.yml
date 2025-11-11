@@ -3,11 +3,10 @@ version: "3"
 services:
 
   db:
-    image: postgres
+    image: postgres:18
     restart: on-failure
     volumes:
-      - ./db/data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/data:/var/lib/postgresql
     env_file:
       - ../.env
     

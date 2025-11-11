@@ -1,176 +1,229 @@
-const routes = require("express")()
+import express from "express"
+import { db, rezeptEinheitTypes } from "../../modules/globals.js"
+const routes = express() 
 
-require("dotenv").config()
-
-const berechnen = require("../../modules/berechnen")
-
-routes.get("/:id/alle", async (req, res) => {
+routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
     try {
-        res.json( await berechnen(req.params.id) )
+        let menge = (isNaN(req.query.menge) || req.query.menge < 1) ? 1 : req.query.menge
+        let einheit = rezeptEinheitTypes.includes(req.query.einheit?.toUpperCase()) ? req.query.einehit?.toUpperCase() : "ST"
+
+        let data = await db.query("SELECT id FROM rezepte WHERE id=$1 AND art='R'", req.params.id)
+        if(data.length < 1) {
+            res.sendStatus(404)
+            return
+        }
+        let id = data[0].id
+
+        let max = await preCheck(id)
+        let text = []
+        if(req.params.art.toLowerCase() == "rezepte") {
+            await berechnen(
+                id, menge, einheit,
+                r => text.push(f("", r.layer*4) + f(r.menge, 6, 2) + f(r.einheit, 2) + "(" + f(r.faktor, 7, 3, false) + "x) " + f(r.name, 60)),
+                w => text.push(f("", w.layer*4) + f(w.menge, 6, 2) + f(w.einheit, 2) + "(" + f(w.faktor, 7, 3, false) + "x) "+ f(w.name, 60)),
+                z => text.push(f("", z.layer*4) + f(z.menge, 6, 2) + f(z.einheit, 2) + "(" + f(z.faktor, 7, 3, false) + "x) "+ f(z.name, 60))
+            )
+
+        } else if(req.params.art.toLowerCase() == "zutaten") {
+            await berechnen(
+                id, menge, einheit,
+                r => {},
+                w => {},
+                z => {
+                    let s = `${z.allergen ? "(A)" : "  "} ${z.name}`
+                    if(!text.includes(s)) text.push(s)
+                }
+            )
+
+        } else if(req.params.art.toLowerCase() == "preis") {
+            let gesamtPreis = 0
+            await berechnen(
+                id, menge, einheit,
+                r => text.push(f("", r.layer*4) + f(r.menge, 6, 2) + f(r.einheit, 2) + f(r.name, 60)),
+                w => text.push(f("", w.layer*4) + f(w.menge, 6, 2) + f(w.einheit, 2) + f(w.name, 60)),
+                z => text.push(f("", z.layer*4) + f(z.menge, 6, 2) + f(z.einheit, 2) + f(z.name, 60)),
+                l => {
+                    text.push(f("", max*4) + f(l.name, 20) + f(l.preis, 7, 3) + "(" + l.datum + ")")
+                    gesamtPreis += l.preis
+                }
+            )
+            text.push(f("", max*4+21) + f("--------", 7))
+            text.push(f("", max*4+8) + "Gesamtpreis: " + f(gesamtPreis, 7, 3))
+
+        } else if(req.params.art.toLowerCase() == "naehrwertangaben") {
+            let kcal=0, kj=0, fett=0, gesfett =0, kohlen=0, zucker=0, eiweiss=0, salz=0
+            await berechnen(
+                id, menge, einheit,
+                r => text.push(f("", r.layer*4) + f(r.menge, 6, 2) + f(r.einheit, 2) + f(r.name, 60)),
+                w => text.push(f("", w.layer*4) + f(w.menge, 6, 2) + f(w.einheit, 2) + f(w.name, 60)),
+                z => {
+                    text.push(f("", z.layer*4) + f(z.menge, 6, 2) + f(z.einheit, 2) + f(z.name, 60))
+                    text.push(f(z.nwa_kcal, 8, 1) + f(z.nwa_kj, 8, 1) + f(z.nwa_fett, 8, 1) + f(z.nwa_gesfett, 8, 1) + f(z.nwa_kohlen, 8, 1) +
+                        f(z.nwa_zucker, 8, 1) + f(z.nwa_eiweiss, 8, 1) + f(z.nwa_salz, 8, 1))
+                    kcal += z.nwa_kcal
+                    kj += z.nwa_kj
+                    fett += z.nwa_fett
+                    gesfett += z.nwa_gesfett
+                    kohlen += z.nwa_kohlen
+                    zucker += z.nwa_zucker
+                    eiweiss += z.nwa_eiweiss
+                    salz += z.nwa_salz
+                }
+            )
+            text.push("".padEnd(8*9-1, "-"))
+            text.push(f(kcal, 6, 0) + f(kj, 8, 0) + f(fett, 8, 0) + f(gesfett, 8, 0) + f(kohlen, 8, 0) + f(zucker, 8, 0) + f(eiweiss, 8, 0) + f(salz, 8, 0))
+            text.push("  kcal       kJ     Fett gesFetts Kohlenhy   Zucker  Eiweiss     Salz")
+
+        } else if(req.params.art.toLowerCase() == "json") {
+            let preis=0, kcal=0, kj=0, fett=0, gesfett =0, kohlen=0, zucker=0, eiweiss=0, salz=0
+            let zutaten = {}
+            await berechnen(
+                id, menge, einheit,
+                r => {},
+                w => {},
+                z => {
+                    kcal += z.nwa_kcal
+                    kj += z.nwa_kj
+                    fett += z.nwa_fett
+                    gesfett += z.nwa_gesfett
+                    kohlen += z.nwa_kohlen
+                    zucker += z.nwa_zucker
+                    eiweiss += z.nwa_eiweiss
+                    salz += z.nwa_salz
+
+                    let prev = zutaten[z.name] || {g: 0, ml: 0, st: 0}
+                    zutaten[z.name] = {
+                        g:  prev.g  + (z.menge_.g  || 0),
+                        ml: prev.ml + (z.menge_.ml || 0),
+                        st: prev.st + (z.menge_.st || 0)
+                    }
+                },
+                l => {
+                    preis += l.preis
+                }
+            )
+            res.send({
+                preis: preis.toFixed("2").replace(".", ","),
+                naehrwertangaben: {
+                    kcal: Math.round(kcal),
+                    kj: Math.round(kj),
+                    fett: Math.round(fett),
+                    gesfettsaeuren: Math.round(gesfett),
+                    kohlenhydrate: Math.round(kohlen),
+                    zucker: Math.round(zucker),
+                    eiweiss: Math.round(eiweiss),
+                    salz: Math.round(salz),
+                },
+                zutaten
+            })
+            return
+
+        } else {
+            res.sendStatus(404)
+            return
+        }
+        res.send(text.join("\n"))
+
     } catch(e) {
+        if(e.message.substring(0, 35) == "invalid input syntax for type uuid:") {
+            res.sendStatus(404)
+            return
+        }
         res.status(500).send(e.stack || e)
     }
 })
-
-routes.get("/:id/rezept", async (req, res) => {
-    try {
-        let daten = await berechnen(req.params.id)
-
-        let textGanz = textErstellen(
-            daten,
-            (rezept, text) => `\n${text}${slice(rezept.menge, 7)}${slice(rezept.einheit, 3)} ${slice(rezept.faktor, 7)}x ${rezept.name} (${rezept.rezept_menge}${rezept.einheit})`,
-            (zutat, text) => `${text}${slice(zutat.menge, 7)}${slice(zutat.einheit, 3)} ${zutat.name}`,
-            (lieferant, text) => null,
-            10
-        )
-
-        res.send(textGanz)
-
-    } catch(e) {
-        res.status(500).send(e.stack || e)
-    }
-})
-
-routes.get("/:id/zutaten", async (req, res) => {
-    try {
-        let daten = await berechnen(req.params.id)
-
-        let textGanz = textErstellen(
-            daten,
-            (rezept, text) => null,
-            (rezept, text) => `${rezept.id}/////${rezept.name}/////${rezept.menge_vgl}/////${rezept.menge}/////${rezept.einheit}`,
-            (lieferant, text) => null,
-            0
-        )
-
-        let zutaten = textGanz.split("\n").slice(0, -1)
-        let zutaten_ = []
-        zutaten.forEach(zutat => {
-            let z = zutat.split("/////")
-            zutatFormated = {
-                id: z[0],
-                name: z[1],
-                menge_vgl: Number(z[2]),
-                menge: Number(z[3]),
-                einheit: z[4]
-            }
-            let index = zutaten_.findIndex(z => z.id == zutatFormated.id)
-            if(index > -1) {
-                zutaten_[index].menge += zutatFormated.menge,
-                zutaten_[index].menge_vgl += zutatFormated.menge_vgl
-            } else {
-                zutaten_.push(zutatFormated)
-            }
-        })
-
-        zutaten_.sort( (a, b) => a.menge_vgl < b.menge_vgl)
-
-        textGanz = ""
-        textEnde = "\n\n"
-        zutaten_.forEach(zutat => {
-            textGanz += slice(zutat.menge, 7) + slice(zutat.einheit, 3) + "  " +  zutat.name + "\n"
-            textEnde += zutat.name + ", "
-        })
-        textGanz += textEnde.slice(0, -2) + "\n"
-
-        res.send(textGanz)
-
-    } catch(e) {
-        res.status(500).send(e.stack || e)
-    }
-})
-
-routes.get("/:id/preis", async (req, res) => {
-    try {
-        let daten = await berechnen(req.params.id)
-
-        let textGanz = textErstellen(
-            daten,
-            (rezept, text) => `\n${text}${slice(rezept.menge, 7)}${slice(rezept.einheit, 3)} ${slice(rezept.faktor, 7)}x ${rezept.name} (${rezept.rezept_menge}${rezept.einheit})`,
-            (zutat, text) => `\n${text}${slice(zutat.menge, 7)}${slice(zutat.einheit, 3)} ${zutat.name}`,
-            (lieferant, text) => `${slice(`${text}${String(Math.round(lieferant.anteil)).padStart(3, " ")}% ${lieferant.name}`, 80)}${slice(lieferant.gesamt_preis, 7)}€ (stand: ${lieferant.datum.split("-").reverse().join(".")})`,
-            10
-        )
-        textGanz += `${"".padEnd(80, " ")}--------
-${"".padEnd(80, " ")}${slice(daten.gesamt_preis, 7)}€`
-
-        res.send(textGanz)
-
-    } catch(e) {
-        res.status(500).send(e.stack || e)
-    }
-})
-
-routes.get("/:id/naehrwerte", async (req, res) => {
-    try {
-        let daten = await berechnen(req.params.id)
-
-        let textGanz = "".padEnd(80, " ") + "Energie".padStart(25, " ") + "Fett ".padStart(10, " ") + "davon ges. Fettsäuren".padStart(25, " ") + 
-            "Kohlenhydrate".padStart(15, " ") + "davon Zucker".padStart(15, " ") + "Eiweiß".padStart(10, " ") + "Salz".padStart(10, " ")
-        textGanz += textErstellen(
-            daten,
-            (rezept, text) => `\n${text}${slice(rezept.menge, 7)}${slice(rezept.einheit, 3)} ${slice(rezept.faktor, 7)}x ${rezept.name} (${rezept.rezept_menge}${rezept.einheit})`,
-            (zutat, text) => `\n${text}${slice(zutat.menge, 7)}${slice(zutat.einheit, 3)} ${zutat.name}`,
-            (lieferant, text) => `${slice(`${text}${String(Math.round(lieferant.anteil)).padStart(3, " ")}% ${lieferant.name}`, 80)}${slice(lieferant.gesamt_nwa_energie_kj, 10)}kJ ${slice(lieferant.gesamt_nwa_energie_kcal, 8)}kcal ${slice(lieferant.gesamt_nwa_fett, 8)}g ${slice(lieferant.gesamt_nwa_ges_fettsaeuren, 23)}g ${slice(lieferant.gesamt_nwa_kohlenhydrate, 13)}g ${slice(lieferant.gesamt_nwa_zucker, 13)}g ${slice(lieferant.gesamt_nwa_eiweiss, 8)}g ${slice(lieferant.gesamt_nwa_salz, 8)}g`,
-            10
-        )
-        textGanz += `${"".padEnd(80, " ").padEnd(190, "-")}
-${"".padEnd(80, " ")}${slice(daten.gesamt_nwa_energie_kj, 10)}kJ ${slice(daten.gesamt_nwa_energie_kcal, 8)}kcal ${slice(daten.gesamt_nwa_fett, 8)}g ${slice(daten.gesamt_nwa_ges_fettsaeuren, 23)}g ${slice(daten.gesamt_nwa_kohlenhydrate, 13)}g ${slice(daten.gesamt_nwa_zucker, 13)}g ${slice(daten.gesamt_nwa_eiweiss, 8)}g ${slice(daten.gesamt_nwa_salz, 8)}g
-
-Energie:   ${slice(daten.gesamt_nwa_energie_kj, 10)}kJ ${slice(daten.gesamt_nwa_energie_kcal, 8)}kcal
-Fett:                      ${slice(daten.gesamt_nwa_fett, 8)}g
-    davon ges. Fettsäuren: ${slice(daten.gesamt_nwa_ges_fettsaeuren, 8)}g
-Kohlenhydrate:             ${slice(daten.gesamt_nwa_kohlenhydrate, 8)}g
-    davon Zucker:          ${slice(daten.gesamt_nwa_zucker, 8)}g
-Eiweiß:                    ${slice(daten.gesamt_nwa_eiweiss, 8)}g
-Salz:                      ${slice(daten.gesamt_nwa_salz, 8)}g`
-        res.send(textGanz)
-
-    } catch(e) {
-        res.status(500).send(e.stack || e)
-    }
-})
+export async function preCheck(id, layer=0, ids=[]) {
+    if(ids.includes(id)) throw Error("Das Rezept beinhaltet sich an einer Stelle selbst als Zutat. Bitte beheben sie diese Kreisverbindung.")
+    ids.push(id)
+    
+    let zutaten = await db.query("SELECT zutat AS id FROM mapping WHERE rezept=$1", id)
+    if(zutaten.length < 1) return 1
+    return Math.max(...(await Promise.all( zutaten.map( async zutat => {
+        return await preCheck(zutat.id, layer+1, ids) + 1
+    }))))
+}
 
 
+export async function berechnen(id, menge=1, einheit="ST", cbRezept=rezept=>{}, cbZwischenrezept=zwischenrezept=>{},
+    cbZutat=zutat=>{}, cbLieferant=lieferant=>{}, layer=0) {
+    let [rezept] = await db.query("SELECT * FROM rezepte WHERE id=$1", id)
 
-
-function textErstellen(daten, rezeptCallback, zutatCallback, lieferantCallback, einruecken=5, ebene=0) {
-    let text = "".padEnd(einruecken * ebene, " ")
-
-    if(daten.zutaten == null && daten.lieferanten == null) {
-        text = lieferantCallback(daten, text) || ""
-        if(text != "") text += "\n"
-        
-
-    } else if(daten.zutaten == null) {
-        text = zutatCallback(daten, text) || ""
-        if(text != "") text += "\n"
-        daten.lieferanten.forEach(zutat => {
-            text += textErstellen(zutat, rezeptCallback, zutatCallback, lieferantCallback, einruecken, ebene + 1)
-        })
-
+    let f
+    if(einheit == "KG") {
+        f = rezept.menge_g == 0 ? 0 : menge * 1000/ rezept.menge_g
+    } else if(einheit == "G") {
+        f = rezept.menge_g == 0 ? 0 : menge / rezept.menge_g
+    } else if(einheit == "ST") {
+        f = rezept.menge_st == 0 ? 0 : menge / rezept.menge_st
+    } else if(einheit == "L") {
+        f = rezept.menge_ml == 0 ? 0 : menge * 1000 / rezept.menge_ml
+    } else if(einheit == "ML") {
+        f = rezept.menge_ml == 0 ? 0 : menge / rezept.menge_ml
     } else {
-        text = rezeptCallback(daten, text) || ""
-        if(text != "") text += "\n"
-        daten.zutaten.forEach(zutat => {
-            text += textErstellen(zutat, rezeptCallback, zutatCallback, lieferantCallback, einruecken, ebene + 1)
+        throw Error(`Einheit muss eines der folgenden Möglichkeiten sein: KG | G | ST | L | ML. Gegeben: ${einheit} (${id})`)
+    }
+    
+    if(rezept.art == "Z") {
+        cbZutat({
+            name: rezept.name,
+            menge_: {
+                g: rezept.menge_g * f,
+                ml: rezept.menge_ml * f,
+                st: rezept.menge_st * f,
+            },
+            allergen: rezept.allergen,
+            nwa_kcal: rezept.nwa_kcal * f,
+            nwa_kj: rezept.nwa_kj * f,
+            nwa_fett: rezept.nwa_fett * f,
+            nwa_gesfett: rezept.nwa_gesfett * f,
+            nwa_kohlen: rezept.nwa_kohlen * f,
+            nwa_zucker: rezept.nwa_zucker * f,
+            nwa_eiweiss: rezept.nwa_eiweiss * f,
+            nwa_salz: rezept.nwa_salz * f,
+            menge,
+            einheit,
+            faktor: f,
+            layer
         })
+        let lieferanten = await db.query("SELECT * FROM lieferanten WHERE rezept=$1", id)
+        let lieferantenAnteilGesamt = lieferanten.reduce((p, c) => p + c.anteil, 0)
+        return await Promise.all( lieferanten.map( lieferant => {
+            f = lieferantenAnteilGesamt == 0 ? 0 : f * lieferant.anteil / lieferantenAnteilGesamt
+            cbLieferant({
+                name: lieferant.name,
+                datum: lieferant.datum,
+                preis: Number(lieferant.preis.replace(",", ".")) * f,
+                faktor: f,
+                layer: layer + 1
+            })
+        }))
     }
 
-    return text
-}
-
-function slice(text, length) {
-    if(typeof text == "number") {
-        let digitsBefore = String(Math.floor(text))
-        let digitsAfter = String(text).slice(digitsBefore.length + 1, digitsBefore.length + 4).padEnd(3, "0")
-        
-        text = digitsBefore + "," + digitsAfter
-
-        return String(text).padStart(length, " ")
+    let r = {
+        name: rezept.name,
+        menge,
+        einheit,
+        faktor: f,
+        layer
     }
-
-    return text.padEnd(length, " ").slice(0, length)
+    if(rezept.art == "R") {
+        cbRezept(r)
+    } else if(rezept.art == "W") {
+        cbZwischenrezept(r)
+    } else {
+        throw Error(`Art muss eines der folgenden Möglichkeiten sein: R | W | Z. Gegeben: ${rezept.art} (${id})`)
+    }
+    let zutaten = await db.query("SELECT * FROM mapping WHERE rezept=$1", id)
+    await Promise.all( zutaten.map( zutat => {
+        return berechnen(zutat.zutat, zutat.menge*f, zutat.einheit, cbRezept, cbZwischenrezept, cbZutat, cbLieferant, layer+1)
+    }))
 }
 
-module.exports = routes
+let f = format
+function format(value, length, afterDot=-1, spaceAtEnd=true) {
+    if(afterDot >= 0) value = value.toFixed(afterDot).padStart(length, " ")
+    if(spaceAtEnd)    length++
+    return String(value).padEnd(length, " ")
+}
+
+export default routes

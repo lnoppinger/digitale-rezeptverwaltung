@@ -1,33 +1,47 @@
-const routes = require("express")()
+import express from "express"
+import expressLayouts from "express-ejs-layouts";
+import { rezeptArtMap, rezeptEinheitTypes } from "../modules/globals.js"
+const routes = express() 
 
-const db = require("../modules/db")
-
+routes.set('view engine', 'ejs')
+routes.use(expressLayouts)
 
 routes.get("/", (req, res) => {
     res.render("home")
 })
 
+for(let rezeptArtKurz in rezeptArtMap) {
+    let rezeptArtLang = rezeptArtMap[rezeptArtKurz]
 
-routes.get("/rezept", (req, res) => {
-    res.render("rezept")
+    routes.get("/"+rezeptArtLang.toLowerCase(), (req, res) => {
+        res.render("liste", {
+            headline: rezeptArtLang,
+            rezeptArtKurz,
+            rezeptArtLang,
+            rezeptArtMap
+        })
+    })
+}
+
+routes.get("/bearbeiten", (req, res) => {
+    res.render("bearbeiten", {
+        headline: "Bearbeiten",
+        rezeptArtMap,
+        rezeptEinheitTypes
+    })
 })
-routes.get("/rezept/bearbeiten", (req, res) => {
-    res.render("rezept-bearbeiten")
-})
-
-
-routes.get("/zutat", (req, res) => {
-    res.render("zutat")
-})
-routes.get("/zutat/bearbeiten", (req, res) => {
-
-    res.render("zutat-bearbeiten")
-})
-
 
 routes.get("/berechnen", (req, res) => {
-    res.render("berechnen")
+    res.render("berechnen", {
+        headline: "Kalkulation",
+    })
+})
+
+routes.get("/drucken", (req, res) => {
+    res.render("drucken", {
+        headline: "Drucken",
+    })
 })
 
 
-module.exports = routes
+export default routes
