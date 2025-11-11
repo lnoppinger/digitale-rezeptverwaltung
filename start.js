@@ -1,6 +1,8 @@
 import express from "express"
 import morgan from "morgan"
-import { db } from "./globals.js"
+import {auth} from "express-openid-connect"
+import crypto from "crypto"
+import { db, config } from "./globals.js"
 const app = express()
 
 let version
@@ -30,7 +32,27 @@ await db.query("UPDATE globals SET value=$1:json WHERE key='version'", [JSON.str
     bugfix: Number(process.env.npm_package_version.split(".")[2])
 })])
 
-app.use(/^(?!\/ping).*$/, morgan("common"))
+app.use(/^(?!\/ping$)/, morgan("common"))
+
+if(config.OIDC_ISSUER_URL != null) {
+    app.use(auth({
+        authRequired: false,
+        issuerBaseURL: config.OIDC_ISSUER_URL,
+        baseURL: config.OIDC_BASE_URL,
+        clientID: config.OIDC_CLIENT_ID,
+        secret: crypto.randomBytes(15).toString('base64url').slice(0, 20),
+        idpLogout: true
+    }))
+} else {
+    app.use( (req, res, next) => {
+        req.oidc = {
+            user: {
+                sub: "11111111-1111-1111-1111-111111111111"
+            }
+        }
+        next()
+    })
+}
 
 app.use(express.json())
 app.use((await import("./routes/routes.js")).default)
@@ -62,7 +84,8 @@ CREATE TABLE rezepte (
     nwa_eiweiss int,
     nwa_salz int,
     allergen boolean,
-    datum VARCHAR(10)
+    datum VARCHAR(10),
+    owner UUID
 );
 CREATE TABLE lieferanten (
     name VARCHAR(20),
@@ -79,14 +102,6 @@ CREATE TABLE mapping (
     einheit VARCHAR(2),
     index int
 );`)
-//     await db.query(`
-// NOTIFY db_change;
-// CREATE OR REPLACE FUNCTION notify_event_trigger() RETURNS TRIGGER AS $$
-//     BEGIN
-//     PERFORM pg_notify('db', '{"new": ' || coalesce(row_to_json(NEW)::TEXT, '{}') || ', "old": ' || coalesce(row_to_json(OLD)::TEXT, '{}') || ', "table": "' || TG_TABLE_NAME::regclass::text || '", "id": "' || coalesce(NEW.id, OLD.id) || '"');
-//     RETURN NEW;
-//     END;
-// $$ LANGUAGE plpgsql;
-//         `)
+        console.info("Prepared Database for version 2.0.x")
     }
 }

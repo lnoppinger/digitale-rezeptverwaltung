@@ -25,6 +25,20 @@
     </div>
 </a>
 
+<% if(locals.useOidc && locals.isLoggedIn) { %>
+<a href="/logout">
+    <div>
+        <span> Ausloggen </span>
+    </div>
+</a>
+<% } else if(locals.useOidc) { %>
+<a href="/login">
+    <div>
+        <span> Anmelden </span>
+    </div>
+</a>
+<% } %>
+
 <%- contentFor("head") %>
 <link rel="shortcut icon" href="icon.png" type="image/x-icon">
 <style>

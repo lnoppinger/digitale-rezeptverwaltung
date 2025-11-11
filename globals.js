@@ -8,7 +8,10 @@ export let config = {
     POSTGRES_PORT: 5432,
     POSTGRES_USER: "postgres",
     POSTGRES_PASSWORD: "postgres",
-    POSTGRES_DATABASE: "postgres"
+    POSTGRES_DATABASE: "postgres",
+    OIDC_ISSUER_URL: null,
+    OIDC_BASE_URL: "http://localhost",
+    OIDC_CLIENT_ID: "digitale-rezeptverwaltung",
 }
 for(let key in config) {
     config[key] = process.env[key]

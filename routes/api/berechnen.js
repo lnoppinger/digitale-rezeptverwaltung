@@ -7,7 +7,7 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
         let menge = (isNaN(req.query.menge) || req.query.menge < 1) ? 1 : req.query.menge
         let einheit = rezeptEinheitTypes.includes(req.query.einheit?.toUpperCase()) ? req.query.einehit?.toUpperCase() : "ST"
 
-        let data = await db.query("SELECT id FROM rezepte WHERE id=$1 AND art='R'", req.params.id)
+        let data = await db.query("SELECT id FROM rezepte WHERE owner=$1 AND id=$2 AND art='R'", [req.oidc.user.sub, req.params.id])
         if(data.length < 1) {
             res.sendStatus(404)
             return
@@ -18,7 +18,7 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
         let text = []
         if(req.params.art.toLowerCase() == "rezepte") {
             await berechnen(
-                id, menge, einheit,
+                id, req.oidc.user.sub, menge, einheit,
                 r => text.push(f("", r.layer*4) + f(r.menge, 6, 2) + f(r.einheit, 2) + "(" + f(r.faktor, 7, 3, false) + "x) " + f(r.name, 60)),
                 w => text.push(f("", w.layer*4) + f(w.menge, 6, 2) + f(w.einheit, 2) + "(" + f(w.faktor, 7, 3, false) + "x) "+ f(w.name, 60)),
                 z => text.push(f("", z.layer*4) + f(z.menge, 6, 2) + f(z.einheit, 2) + "(" + f(z.faktor, 7, 3, false) + "x) "+ f(z.name, 60))
@@ -26,7 +26,7 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
 
         } else if(req.params.art.toLowerCase() == "zutaten") {
             await berechnen(
-                id, menge, einheit,
+                id, req.oidc.user.sub, menge, einheit,
                 r => {},
                 w => {},
                 z => {
@@ -38,7 +38,7 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
         } else if(req.params.art.toLowerCase() == "preis") {
             let gesamtPreis = 0
             await berechnen(
-                id, menge, einheit,
+                id, req.oidc.user.sub, menge, einheit,
                 r => text.push(f("", r.layer*4) + f(r.menge, 6, 2) + f(r.einheit, 2) + f(r.name, 60)),
                 w => text.push(f("", w.layer*4) + f(w.menge, 6, 2) + f(w.einheit, 2) + f(w.name, 60)),
                 z => text.push(f("", z.layer*4) + f(z.menge, 6, 2) + f(z.einheit, 2) + f(z.name, 60)),
@@ -53,7 +53,7 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
         } else if(req.params.art.toLowerCase() == "naehrwertangaben") {
             let kcal=0, kj=0, fett=0, gesfett =0, kohlen=0, zucker=0, eiweiss=0, salz=0
             await berechnen(
-                id, menge, einheit,
+                id, req.oidc.user.sub, menge, einheit,
                 r => text.push(f("", r.layer*4) + f(r.menge, 6, 2) + f(r.einheit, 2) + f(r.name, 60)),
                 w => text.push(f("", w.layer*4) + f(w.menge, 6, 2) + f(w.einheit, 2) + f(w.name, 60)),
                 z => {
@@ -78,7 +78,7 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
             let preis=0, kcal=0, kj=0, fett=0, gesfett =0, kohlen=0, zucker=0, eiweiss=0, salz=0
             let zutaten = {}
             await berechnen(
-                id, menge, einheit,
+                id, req.oidc.user.sub, menge, einheit,
                 r => {},
                 w => {},
                 z => {
@@ -144,9 +144,9 @@ export async function preCheck(id, layer=0, ids=[]) {
 }
 
 
-export async function berechnen(id, menge=1, einheit="ST", cbRezept=rezept=>{}, cbZwischenrezept=zwischenrezept=>{},
+export async function berechnen(id, userId, menge=1, einheit="ST", cbRezept=rezept=>{}, cbZwischenrezept=zwischenrezept=>{},
     cbZutat=zutat=>{}, cbLieferant=lieferant=>{}, layer=0) {
-    let [rezept] = await db.query("SELECT * FROM rezepte WHERE id=$1", id)
+    let [rezept] = await db.query("SELECT * FROM rezepte WHERE owner=$1 AND id=$2", [userId, id])
 
     let f
     if(einheit == "KG") {
@@ -213,9 +213,9 @@ export async function berechnen(id, menge=1, einheit="ST", cbRezept=rezept=>{}, 
     } else {
         throw Error(`Art muss eines der folgenden Möglichkeiten sein: R | W | Z. Gegeben: ${rezept.art} (${id})`)
     }
-    let zutaten = await db.query("SELECT * FROM mapping WHERE rezept=$1", id)
+    let zutaten = await db.query("SELECT zutat FROM mapping JOIN rezepte mapping.zutat = rezepte.id WHERE rezepte.owner=$1 AND mapping.rezept=$2", [userId, id])
     await Promise.all( zutaten.map( zutat => {
-        return berechnen(zutat.zutat, zutat.menge*f, zutat.einheit, cbRezept, cbZwischenrezept, cbZutat, cbLieferant, layer+1)
+        return berechnen(zutat.zutat, userId, zutat.menge*f, zutat.einheit, cbRezept, cbZwischenrezept, cbZutat, cbLieferant, layer+1)
     }))
 }
 

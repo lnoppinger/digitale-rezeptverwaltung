@@ -11,9 +11,9 @@ routes.get("/liste/:type", async (req, res, next) => {
             res.sendStatus(404)
             return
         }
-        let typeCondition = type == "A" ? "" : "WHERE art=$1"
+        let typeCondition = type == "A" ? "" : "AND art=$2"
 
-        let rezepte = await db.query(`SELECT id, name, datum, art FROM rezepte ${typeCondition} ORDER BY name ASC`, type)
+        let rezepte = await db.query(`SELECT id, name, datum, art FROM rezepte WHERE owner=$1${typeCondition} ORDER BY name ASC`, [req.oidc.user.sub, type])
         rezepte = await Promise.all( rezepte.map( async rezept => {
             if(rezept.art != "Z") return rezept
 
@@ -43,7 +43,7 @@ routes.get("/liste/:type", async (req, res, next) => {
 
 routes.get("/rezept/:id", async (req, res) => {
     try {
-        let [rezept] = await db.query("SELECT id, name, art, text, menge_g, menge_ml, menge_st, nwa_kcal, nwa_kj, nwa_fett, nwa_gesfett, nwa_kohlen, nwa_zucker, nwa_eiweiss, nwa_salz, allergen FROM rezepte WHERE id=$1", req.params.id)
+        let [rezept] = await db.query("SELECT id, name, art, text, menge_g, menge_ml, menge_st, nwa_kcal, nwa_kj, nwa_fett, nwa_gesfett, nwa_kohlen, nwa_zucker, nwa_eiweiss, nwa_salz, allergen FROM rezepte WHERE owner=$1 AND id=$2", [req.oidc.user.sub, req.params.id])
         if(rezept == null) {
             res.sendStatus(404)
             return
@@ -55,8 +55,8 @@ routes.get("/rezept/:id", async (req, res) => {
             art: rezept.art,
             text: rezept.text,
             allergen: rezept.allergen,
-            rezepte: await db.query("SELECT rezepte.name, rezepte.id FROM rezepte JOIN mapping ON rezepte.id = mapping.rezept WHERE mapping.zutat=$1", req.params.id),
-            zutaten: await db.query("SELECT rezepte.name, rezepte.id, mapping.menge, mapping.einheit, index FROM rezepte JOIN mapping ON rezepte.id = mapping.zutat WHERE mapping.rezept=$1 ORDER BY mapping.index", req.params.id),
+            rezepte: await db.query("SELECT rezepte.name, rezepte.id FROM rezepte JOIN mapping ON rezepte.id = mapping.rezept WHERE rezepte.owner=$1 AND mapping.zutat=$2", [req.oidc.user.sub, req.params.id]),
+            zutaten: await db.query("SELECT rezepte.name, rezepte.id, mapping.menge, mapping.einheit, index FROM rezepte JOIN mapping ON rezepte.id = mapping.zutat WHERE rezepte.owner=$1 AND mapping.rezept=$2 ORDER BY mapping.index", [req.oidc.user.sub, req.params.id]),
             lieferanten: await db.query("SELECT name, anteil, preis, datum FROM lieferanten WHERE rezept=$1 ORDER BY name ASC", req.params.id),
             menge: {
                 g: rezept.menge_g,
@@ -189,7 +189,7 @@ routes.put("/rezept", async (req, res) => {
             menge: {},
             naehrwertangaben: {}
         }
-        if(body.id != null && (await db.query("SELECT id FROM rezepte WHERE id=$1", body.id)).length <= 0) throw new BodyError("Es wurde kein Rezept mit der angegebenen Id gefunden.")
+        if(body.id != null && (await db.query("SELECT id FROM rezepte WHERE owner=$1 AND id=$2", [req.oidc.user.sub, body.id])).length <= 0) throw new BodyError("Es wurde kein Rezept mit der angegebenen Id gefunden.")
         if(!rezeptArtTypes.includes(body.art)) throw new BodyError("Art muss einer der folgenden Möglichkeiten sein: Z | R | W.")
 
         for(let key of ["g", "ml", "st"]) {
@@ -225,14 +225,14 @@ routes.put("/rezept", async (req, res) => {
         // Daten ändern
         let datum = (new Date()).toLocaleString("de-De", {day: "2-digit", month: "2-digit", year: "numeric"})
         if(req.body.id == null) {
-            let [{id}] = await db.query("INSERT INTO rezepte(name, art, menge_g, menge_ml, menge_st, text, nwa_kcal, nwa_kj, nwa_fett, nwa_gesfett, nwa_kohlen, nwa_zucker, nwa_eiweiss, nwa_salz, allergen, datum)\
+            let [{id}] = await db.query("INSERT INTO rezepte(name, art, menge_g, menge_ml, menge_st, text, nwa_kcal, nwa_kj, nwa_fett, nwa_gesfett, nwa_kohlen, nwa_zucker, nwa_eiweiss, nwa_salz, allergen, datum, owner)\
                 VALUES (${name}, ${art}, ${menge.g}, ${menge.ml}, ${menge.st}, ${text}, ${naehrwertangaben.kcal}, ${naehrwertangaben.kj}, ${naehrwertangaben.fett}, ${naehrwertangaben.gesfettsaeuren},\
-                ${naehrwertangaben.kohlenhydrate}, ${naehrwertangaben.zucker}, ${naehrwertangaben.eiweiss}, ${naehrwertangaben.salz}, ${allergen}, ${datum}) RETURNING id", {...body, datum})
+                ${naehrwertangaben.kohlenhydrate}, ${naehrwertangaben.zucker}, ${naehrwertangaben.eiweiss}, ${naehrwertangaben.salz}, ${allergen}, ${datum}, ${user}) RETURNING id", {...body, datum, user: req.oidc.user.sub})
             body.id = id
         } else {
             await db.query("UPDATE rezepte SET name=${name}, art=${art}, menge_g=${menge.g}, menge_ml=${menge.ml}, menge_st=${menge.st}, text=${text}, nwa_kcal=${naehrwertangaben.kcal}, nwa_kj=${naehrwertangaben.kj},\
             nwa_fett=${naehrwertangaben.fett}, nwa_gesfett=${naehrwertangaben.gesfettsaeuren}, nwa_kohlen=${naehrwertangaben.kohlenhydrate}, nwa_zucker=${naehrwertangaben.zucker},\
-            nwa_eiweiss=${naehrwertangaben.eiweiss}, nwa_salz=${naehrwertangaben.salz}, allergen=${allergen}, datum=${datum} WHERE id=${id}", {...body, datum})
+            nwa_eiweiss=${naehrwertangaben.eiweiss}, nwa_salz=${naehrwertangaben.salz}, allergen=${allergen}, datum=${datum}, owner=${user} WHERE id=${id}", {...body, datum, user: req.oidc.user.sub})
         }
 
         await db.query("DELETE FROM mapping WHERE rezept=$1", body.id)
@@ -261,6 +261,12 @@ routes.put("/rezept", async (req, res) => {
 
 routes.delete("/rezept/:id", async (req, res) => {
     try {
+        let ids = await db.query("SELECT id FROM rezepte WHERE owner=$1 AND id=$1", [req.oidc.user.sub, req.params.id])
+        if(ids.length < 1) {
+            res.sendStatus(404)
+            return
+        }
+
         await db.query("DELETE FROM mapping WHERE rezept=$1 OR zutat=$1", req.params.id)
         await db.query("DELETE FROM lieferanten WHERE rezept=$1", req.params.id)
         await db.query("DELETE FROM rezepte WHERE id=$1", req.params.id)

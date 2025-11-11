@@ -1,4 +1,47 @@
 # Mein Digitales Rezeptbuch
+Kinderleichtes erstellen, drucken, berechnen von komplexen Rezepten. <br>
+Der Materialpreis und die Nährwertangaben eines Rezeptes lassen sich schnell mit nur einem klick über die einzelnen Zutaten berechnen. <br>
+Zwischenrezepte: Manche Abläufe wiederholen sich einfach, z.B. wiederholt sich der Tortenboden bei manchen Torten. Dieser kann extra in einem Zwischenrezept "Tortenboden" angelegt werden und dann in den Rezepten der Torten wiederverwendet werden. Somit sparen Sie sich mühsame schreibarbeit und haben einen besseren Überblick über Ihre Rezepte. <br> 
+Sie kaufen nicht immer das selbe Produkt? Sie können bei Zutaten mehrere Lieferanten hinzufügen inkl. des zugehörigen Einkaufspreises.
+
+## Einfach ausprobieren
+https://digitale-rezeptverwaltung.demo.lnoppinger.de <br>
+Nutername: demo <br>
+Passwort:  demopasswort
+
+## Installation
+```
+services:
+
+  db:
+    image: postgres:18
+    restart: on-failure
+    volumes:
+      - ./digitale-rezeptverwalung-db:/var/lib/postgresql
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=postgres
+    
+  digitale-rezeptverwalung:
+    build:  https://github.com/lnoppinger/digitale-rezeptverwaltung.git#main
+    ports:
+      - 80:80
+    restart: on-failure
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=postgres
+      - OIDC_ISSUER_URL=https://<keycloak url>/auth/realms/master
+      - OIDC_BASE_URL=http://localhost
+      - OIDC_CLIENT_ID=digitale-rezeptverwaltung
+    
+```
+
 ## API
 ### 1 Liste meiner Rezepte / Zutaten / Zwischenrezepte ansehen
 ```

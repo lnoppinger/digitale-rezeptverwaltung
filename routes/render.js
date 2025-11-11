@@ -1,13 +1,16 @@
 import express from "express"
 import expressLayouts from "express-ejs-layouts";
-import { rezeptArtMap, rezeptEinheitTypes } from "../globals.js"
+import { rezeptArtMap, rezeptEinheitTypes, config } from "../globals.js"
 const routes = express() 
 
 routes.set('view engine', 'ejs')
 routes.use(expressLayouts)
 
 routes.get("/", (req, res) => {
-    res.render("home")
+    res.render("home", {
+        useOidc: config.OIDC_ISSUER_URL != null,
+        isLoggedIn: req.oidc.isAuthenticated()
+    })
 })
 
 for(let rezeptArtKurz in rezeptArtMap) {

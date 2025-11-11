@@ -18,23 +18,16 @@
   },
   "homepage": "https://github.com/lnoppinger/digitale-rezeptverwaltung#readme",
   "dependencies": {
-    "cookie-parser": "^1.4.6",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.6",
-    "exceljs": "^4.3.0",
     "express": "^5.1.0",
     "express-ejs-layouts": "^2.5.1",
-    "express-formidable-v2": "^2.2.1",
+    "express-openid-connect": "^2.19.2",
     "morgan": "^1.10.0",
     "pg-promise": "^12.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  },
-  "nodeWinInstaller": {
-    "db": {
-      "init_file": "./.devcontainer/db/init.sql"
-    }
   },
   "type": "module"
 }
