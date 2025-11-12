@@ -15,7 +15,7 @@ export let config = {
     OIDC_CLIENT_SECRET: "supersecret",
 }
 for(let key in config) {
-    config[key] = process.env[key]
+    if(process.env[key] != null) config[key] = process.env[key]
 }
 console.info(config)
 
