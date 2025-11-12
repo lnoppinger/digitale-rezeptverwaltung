@@ -1,4 +1,4 @@
-# Mein Digitales Rezeptbuch
+# Meine digitale Rezeptverwaltung
 Kinderleichtes erstellen, drucken, berechnen von komplexen Rezepten. <br>
 Der Materialpreis und die Nährwertangaben eines Rezeptes lassen sich schnell mit nur einem klick über die einzelnen Zutaten berechnen. <br>
 Zwischenrezepte: Manche Abläufe wiederholen sich einfach, z.B. wiederholt sich der Tortenboden bei manchen Torten. Dieser kann extra in einem Zwischenrezept "Tortenboden" angelegt werden und dann in den Rezepten der Torten wiederverwendet werden. Somit sparen Sie sich mühsame schreibarbeit und haben einen besseren Überblick über Ihre Rezepte. <br> 
@@ -19,11 +19,8 @@ services:
     volumes:
       - ./digitale-rezeptverwalung-db:/var/lib/postgresql
     environment:
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DATABASE=postgres
     
   digitale-rezeptverwalung:
     build:  https://github.com/lnoppinger/digitale-rezeptverwaltung.git#main
