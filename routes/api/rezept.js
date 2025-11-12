@@ -1,7 +1,6 @@
 import express from "express"
 const routes = express() 
 import {updateClients} from "./events.js"
-// import excelJS from "exceljs"
 import {db, rezeptArtTypes, rezeptEinheitTypes} from "../../globals.js"
 
 routes.get("/liste/:type", async (req, res, next) => {
@@ -13,7 +12,7 @@ routes.get("/liste/:type", async (req, res, next) => {
         }
         let typeCondition = type == "A" ? "" : "AND art=$2"
 
-        let rezepte = await db.query(`SELECT id, name, datum, art FROM rezepte WHERE owner=$1${typeCondition} ORDER BY name ASC`, [req.oidc.user.sub, type])
+        let rezepte = await db.query(`SELECT id, name, datum, art FROM rezepte WHERE owner=\$1 ${typeCondition} ORDER BY name ASC`, [req.oidc.user.sub, type])
         rezepte = await Promise.all( rezepte.map( async rezept => {
             if(rezept.art != "Z") return rezept
 

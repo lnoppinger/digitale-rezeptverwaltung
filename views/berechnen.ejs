@@ -1,8 +1,8 @@
-<pre id="result"> Wählen Sie eine Rezept zum Berechnen aus ...</pre>
+<pre id="result" style="color: var(--black);"> Wählen Sie eine Rezept zum Berechnen aus ...</pre>
 
 <%- contentFor("headlineRight") %>
-<input type="text" id="rezept" list="rezepte-liste" style="width: 150px; border-radius: 15px; border: 2px solid black; height: 25px">
-<select id="berechnungsart" style="margin: 0 10px; border-radius: 15px; border: 2px solid black; height: 30px">
+<input type="text" id="rezept" list="rezepte-liste" placeholder="  Rezeptname">
+<select id="berechnungsart">
     <option value="rezepte"> Zwischenrezepte anzeigen </option>
     <option value="zutaten"> Zutatenliste erstellen </option>
     <option value="preis"> Preis Kalkulieren </option>
@@ -12,7 +12,7 @@
 <%- contentFor("head") %> 
 <style>
     main {
-        overflow-x: scroll
+        overflow-x: auto;
     }
 </style>
 
@@ -55,17 +55,14 @@
         }, (res, e) => {
             if(res.status == 400) {
                 document.getElementById("result").innerText = e.message
-                document.getElementById("result").style.color = "darkred"
                 return true
             } else if(res.status == 404) {
                 document.getElementById("result").innerText = "Das asgewählte Rezept konnte nicht gefunden werden."
-                document.getElementById("result").style.color = "darkred"
                 return true
             }
         })
         if(data != null) {
             document.getElementById("result").innerText = data
-            document.getElementById("result").style.color = "black"
         }
     })
 </script>

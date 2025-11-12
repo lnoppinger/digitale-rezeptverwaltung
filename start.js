@@ -1,8 +1,9 @@
 import express from "express"
 import morgan from "morgan"
-import {auth} from "express-openid-connect"
-import crypto from "crypto"
 import { db, config } from "./globals.js"
+import pkg from "express-openid-connect"
+const {auth, requiresAuth, claimIncludes} = pkg
+import crypto from "crypto"
 const app = express()
 
 let version
@@ -32,7 +33,7 @@ await db.query("UPDATE globals SET value=$1:json WHERE key='version'", [JSON.str
     bugfix: Number(process.env.npm_package_version.split(".")[2])
 })])
 
-app.use(/^(?!\/ping$)/, morgan("common"))
+app.use(/^(?!\/ping$).*/, morgan("common"))
 
 if(config.OIDC_ISSUER_URL != null) {
     app.use(auth({
@@ -40,19 +41,53 @@ if(config.OIDC_ISSUER_URL != null) {
         issuerBaseURL: config.OIDC_ISSUER_URL,
         baseURL: config.OIDC_BASE_URL,
         clientID: config.OIDC_CLIENT_ID,
+        clientSecret: '1ZhvCQdiWQ9704eD7Rn8IEdKlVZnUjO3',
         secret: crypto.randomBytes(15).toString('base64url').slice(0, 20),
-        idpLogout: true
-    }))
+        idpLogout: true,
+        authorizationParams: {
+            response_type: 'code',
+            scope: 'openid profile email roles'
+        }
+    }), (req, res, next) => {
+        if(req.oidc?.user == null)  req.oidc = {
+            user: {
+                realm_access: {
+                    roles: []
+                }
+            },
+            isAuthenticated: () => false
+        }
+        let isPublic   = ["/icon.png", "material-symbols-outlined.woff2", "/api/events", "/", "/ping"].includes(req.originalUrl)
+        let isApiRoute = req.originalUrl.substring(0,4) == "/api"
+        let isLoggedIn = req.oidc.isAuthenticated()
+        let isAllowed  = req.oidc.user.realm_access.roles.includes("digitale-rezeptverwaltung")
+
+        if(!isPublic && !isLoggedIn && isApiRoute) {
+            res.sendStatus(401)
+
+        } else if(!isPublic && !isLoggedIn) {
+            res.redirect("/login")
+
+        } else if(!isPublic && !isAllowed) {
+            res.status(403).send("Zugriff verweigert\nSie haben nicht die nötigen Berechtigungen.")
+
+        } else {
+            next()
+        }
+    })
+
 } else {
     app.use( (req, res, next) => {
         req.oidc = {
             user: {
                 sub: "11111111-1111-1111-1111-111111111111"
-            }
+            },
+            isAuthenticated: () => false
         }
         next()
     })
 }
+
 
 app.use(express.json())
 app.use((await import("./routes/routes.js")).default)
