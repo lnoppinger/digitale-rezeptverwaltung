@@ -1,8 +1,6 @@
 import express from "express"
 import morgan from "morgan"
 import { db, config } from "./globals.js"
-import pkg from "express-openid-connect"
-const {auth, requiresAuth, claimIncludes} = pkg
 import crypto from "crypto"
 const app = express()
 
@@ -36,12 +34,13 @@ await db.query("UPDATE globals SET value=$1:json WHERE key='version'", [JSON.str
 app.use(/^(?!\/ping$).*/, morgan("common"))
 
 if(config.OIDC_ISSUER_URL != null) {
+    const {auth} = await import("express-openid-connect")
     app.use(auth({
         authRequired: false,
         issuerBaseURL: config.OIDC_ISSUER_URL,
         baseURL: config.OIDC_BASE_URL,
         clientID: config.OIDC_CLIENT_ID,
-        clientSecret: '1ZhvCQdiWQ9704eD7Rn8IEdKlVZnUjO3',
+        clientSecret: config.OIDC_CLIENT_SECRET,
         secret: crypto.randomBytes(15).toString('base64url').slice(0, 20),
         idpLogout: true,
         authorizationParams: {

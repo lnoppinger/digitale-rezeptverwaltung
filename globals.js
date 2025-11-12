@@ -12,6 +12,7 @@ export let config = {
     OIDC_ISSUER_URL: null,
     OIDC_BASE_URL: "http://localhost",
     OIDC_CLIENT_ID: "digitale-rezeptverwaltung",
+    OIDC_CLIENT_SECRET: "supersecret",
 }
 for(let key in config) {
     config[key] = process.env[key]

@@ -5,7 +5,7 @@ Zwischenrezepte: Manche Abläufe wiederholen sich einfach, z.B. wiederholt sich 
 Sie kaufen nicht immer das selbe Produkt? Sie können bei Zutaten mehrere Lieferanten hinzufügen inkl. des zugehörigen Einkaufspreises.
 
 ## Einfach ausprobieren
-https://digitale-rezeptverwaltung.demo.lnoppinger.de <br>
+https://digitale-rezeptverwaltung.lnoppinger.de <br>
 Nutername: demo <br>
 Passwort:  demopasswort
 
@@ -39,8 +39,19 @@ services:
       - OIDC_ISSUER_URL=https://<keycloak url>/auth/realms/master
       - OIDC_BASE_URL=http://localhost
       - OIDC_CLIENT_ID=digitale-rezeptverwaltung
-    
+      - OIDC_CLIENT_SECRET=supersecret
 ```
+
+## Authentifizierung mit OIDC
+Konfigurationsbeispiel für Keycloak: <br> <br>
+1) Neue Rolle 'digitale-rezeptverwaltung' erstellen
+2) Neuen Client hinzufügen
+3) Access-Type zu 'confidential' ändern und unter Credentials, Client Secret notieren
+4) Die url, über die die digitale Rezeptverwalung erreichbar sein soll (OIDC_BASE_URL) als Valid Redirect URIs (mit * am Ende) und Web Origin eintragen
+5) Unter Client Scopes 'roles' zu Assigned Default Client Scopes hinzufügen
+6) Unter Mappers (Add Builtin) 'realm roles' hinzufügen und Add to ID Token aktivieren
+7) Allen Benutzern die Zugriff auf die digitale Rezeptverwaltung erhalten sollen, Rolle 'digitale-rezeptverwaltung' zuteilen
+8) OIDC Umgebungsvariablen setzen
 
 ## API
 ### 1 Liste meiner Rezepte / Zutaten / Zwischenrezepte ansehen
