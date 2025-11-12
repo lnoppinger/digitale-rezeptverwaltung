@@ -15,22 +15,22 @@ try {
 }
 try {
     version = JSON.parse(versionData[0].value)
+    if(version.major == null) version.major = thisMajorVersion
 } catch(e) {
     version = {
         major: Number(thisMajorVersion),
         minor: -1,
         bugfix: -1
     }
-    await db.query("INSERT INTO globals(key, value) VALUES ('version', $1)", [JSON.stringify(version)])
+    await db.query("INSERT INTO globals(key, value) VALUES ('version', $1:json)", JSON.stringify(version))
 }
 if(version.major != thisMajorVersion) throw Error(`Datenbank mit Version ${version.major} mit Softwareversion ${thisMajorVersion} nicht kompatibel`)
 await setupDb(version.minor)
-await db.query("UPDATE globals SET value=$1:json WHERE key='version'", [JSON.stringify({
+await db.query("UPDATE globals SET value=$1:json WHERE key='version'", JSON.stringify({
     major:  Number(process.env.npm_package_version.split(".")[0]),
     minor:  Number(process.env.npm_package_version.split(".")[1]),
     bugfix: Number(process.env.npm_package_version.split(".")[2])
-})])
-
+}))
 app.use(/^(?!\/ping$).*/, morgan("common"))
 
 if(config.OIDC_ISSUER_URL != null) {
@@ -92,7 +92,7 @@ app.use(express.json())
 app.use((await import("./routes/routes.js")).default)
 
 app.listen(80, "0.0.0.0", () => {
-    console.log("Server running at http://localhost")
+    console.log(`Server running at http://localhost (v${process.env.npm_package_version})`)
 })
 
 async function setupDb(minorVersion) {
