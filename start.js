@@ -10,15 +10,15 @@ let version = {
     minor: -1,
     bugfix: -1
 }
-await db.none("CREATE TABLE IF NOT EXISTS globals(key VARCHAR(30) PRIMARY KEY, value JSONB)")
-await db.query("INSERT INTO globals(key, value) VALUES ('version', $1:json) ON CONFLICT (key) DO NOTHING", JSON.stringify(version))
+await db.none("CREATE TABLE IF NOT EXISTS globals(key VARCHAR(30) PRIMARY KEY, value TEXT)")
+await db.query("INSERT INTO globals(key, value) VALUES ('version', $1) ON CONFLICT (key) DO NOTHING", JSON.stringify(version))
 
 let versionData = await db.query("SELECT value FROM globals WHERE key='version'")
 version = JSON.parse(versionData[0].value)
 if(version.major != thisMajorVersion) throw Error(`Datenbank mit Version ${version.major} mit Softwareversion ${thisMajorVersion} nicht kompatibel`)
     
 await setupDb(version.minor)
-await db.query("UPDATE globals SET value=$1:json WHERE key='version'", JSON.stringify({
+await db.query("UPDATE globals SET value=$1 WHERE key='version'", JSON.stringify({
     major:  Number(process.env.npm_package_version.split(".")[0]),
     minor:  Number(process.env.npm_package_version.split(".")[1]),
     bugfix: Number(process.env.npm_package_version.split(".")[2])
