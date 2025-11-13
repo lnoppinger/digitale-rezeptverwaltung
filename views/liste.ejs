@@ -1,4 +1,4 @@
-<p style="text-align: center;"> Hier existiert noch nichts <br> Füge neue <%= locals.rezeptArtLang %> hinzu. <br> Oben rechts findest du denn + Button.</p>
+<p style="text-align: center;"> Hier existiert noch nichts. <br> Füge neue <%= locals.rezeptArtLang %> hinzu. <br> Oben rechts findest du den + Button.</p>
 
 <%- contentFor('headlineRight') %>
 <div class="flex-row input" style="width: 200px;">
@@ -18,7 +18,8 @@ window.onload = async () => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                art: "<%= locals.rezeptArtKurz %>"
+                art: "<%= locals.rezeptArtKurz %>",
+                name: "Neue <%= locals.rezeptArtLang %>"
             })
         })
         location.assign("/bearbeiten?id=" + data.id)

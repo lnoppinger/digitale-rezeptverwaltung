@@ -85,95 +85,6 @@ routes.get("/rezept/:id", async (req, res) => {
     }
 })
 
-// routes.get("/export", async (req, res) => {
-//     try {
-//         let qRes = await db.selectJSON(
-//             "rezept",
-//             [
-//                 "rezept.id as id"
-//             ],
-//             `JOIN rezept_art
-//                 ON rezept.rezept_art_id = rezept_art.id
-//             WHERE rezept_art.name ='Rezept'`
-//         )
-
-//         let workbook = new excelJS.Workbook()
-//         let worksheetN = workbook.addWorksheet("Nährwertangaben")
-//         let worksheetP = workbook.addWorksheet("Preis")
-        
-//         worksheetN.columns = [
-//             {
-//                 header: "Name",
-//                 key: "name"
-//             },
-//             {
-//                 header: "Energie (kj)",
-//                 key: "gesamt_nwa_energie_kj"
-//             },
-//             {
-//                 header: "Energie (kcal)",
-//                 key: "gesamt_nwa_energie_kcal"
-//             },
-//             {
-//                 header: "Fett",
-//                 key: "gesamt_nwa_fett"
-//             },
-//             {
-//                 header: "Gesättigte Fettsäuren",
-//                 key: "gesamt_nwa_ges_fettsaeuren"
-//             },
-//             {
-//                 header: "Kohlenhydrate",
-//                 key: "gesamt_nwa_kohlenhydrate"
-//             },
-//             {
-//                 header: "Zucker",
-//                 key: "gesamt_nwa_zucker"
-//             },
-//             {
-//                 header: "Eiweiss",
-//                 key: "gesamt_nwa_eiweiss"
-//             },
-//             {
-//                 header: "Salz",
-//                 key: "gesamt_nwa_salz"
-//             }
-//         ]
-
-//         worksheetP.columns = [
-//             {
-//                 header: "Name",
-//                 key: "name"
-//             },
-//             {
-//                 header: "Preis",
-//                 key: "gesamt_preis"
-//             }
-//         ]
-
-//         await Promise.all(qRes.map( async rezept => {
-//             let daten = await berechnen(rezept.id)
-//             workbook.eachSheet( worksheet => {
-//                 worksheet.addRow(daten)
-//             })
-//         }) || [])
-
-//         let fileName = "Warenwirtschaft Export " + new Date(Date.now()).toLocaleDateString("de-De", {
-//             day: "2-digit",
-//             month: "2-digit",
-//             year: "numeric"
-//         })
-
-//         res.setHeader('Content-Type', 'application/vnd.openxmlformats')
-//         res.setHeader("Content-Disposition", "attachment; filename=" + fileName + ".xlsx");
-        
-//         await (await workbook).xlsx.write(res)
-
-//     } catch(e) {
-//         res.status(500).send(e.stack || e)
-//     }
-// })
-
 class BodyError extends Error {}
 
 routes.put("/rezept", async (req, res) => {
@@ -183,7 +94,7 @@ routes.put("/rezept", async (req, res) => {
             id: req.body.id || null,
             name: req.body.name?.substring(0, 60) || "Neues Rezept",
             art: req.body.art?.toUpperCase() || "R",
-            text: req.body.text || "Hier können sie das Rezept hinzufügen",
+            text: req.body.text || "Hier die Zutaten einfügen und in den Text einbetten.\nDie blauen Zutatenblöcke können an die richtige Position geschoben werden. Neue Zutaten über 'Zutat hinzufügen' einfügen",
             allergen: req.body.allergen == true,
             menge: {},
             naehrwertangaben: {}

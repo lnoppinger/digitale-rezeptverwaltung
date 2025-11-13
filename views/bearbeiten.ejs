@@ -26,7 +26,7 @@
         <button id="neue-zutat"> Zutat hinzufügen </button>
     </div>
     <div id="editor" contenteditable="true">Hier die Zutaten einfügen und in den Text einbetten.
-Die gelben Zutatenblöcke können an die richtige Position geschoben werden.</div>
+Die blauen Zutatenblöcke können an die richtige Position geschoben werden.</div>
 </section>
 
 <section id="s-naehrwertangaben">
@@ -155,6 +155,7 @@ Die gelben Zutatenblöcke können an die richtige Position geschoben werden.</di
             <% } %>
             </select>
         </label>
+        <p></p>
         <button id="neue-zutat-hinzufuegen" style="margin-left: 70px; margin-top: 20px;"> Zutat hinzufügen </button>
     </div>
 </dialog>
@@ -333,6 +334,7 @@ document.getElementById("neue-zutat").addEventListener("click", e => {
     dialog.open = true
     dialog.querySelector("[name='zutat.name']").value = "",
     dialog.querySelector("[name='zutat.menge']").value = "100"
+    dialog.querySelector("p").innerText = ""
 })
 dialog.addEventListener("click", e => {
     if(e.target == dialog) dialog.open = false
@@ -340,13 +342,44 @@ dialog.addEventListener("click", e => {
 document.getElementById("dialog-close").addEventListener("click", e => {
     dialog.open = false
 })
-document.getElementById("neue-zutat-hinzufuegen").addEventListener("click", e => {
+document.querySelector("dialog [name='zutat.name']").addEventListener("change", e => {
+    if(document.querySelector(`#zutaten-liste option[value='${e.target.value}']`)?.dataset?.id == null) {
+        dialog.querySelector("p").innerHTML = "Diese Zutate existiert noch nicht. <br> Mit dem Hinzufügen wird sie automatisch erstellt."
+    } else {
+        dialog.querySelector("p").innerHTML = "Zutat gefunden."
+    }
+})
+document.querySelector("dialog [name='zutat.name']").addEventListener("keyup", e => {
+        e.target.dispatchEvent(new Event("change"))
+    })
+document.getElementById("neue-zutat-hinzufuegen").addEventListener("click", async e => {
     let elem = document.importNode(document.getElementById("zutat").content, true).firstElementChild
     let name = dialog.querySelector("[name='zutat.name']").value
     if(name == null) return
 
+    let id = document.querySelector(`#zutaten-liste option[value='${name}']`)?.dataset?.id
+    if(id == null) {
+
+        let data = await fetchJSON("/api/rezept", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                art: "Z",
+                menge: {
+                    g: 1,
+                    ml: 1,
+                    st: 1
+                },
+                name
+            })
+        })
+        id = data.id
+    }
+
     let data = {
-        id: document.querySelector(`#zutaten-liste option[value='${name}']`)?.dataset?.id,
+        id,
         menge: dialog.querySelector("[name='zutat.menge']").valueAsNumber,
         einheit: dialog.querySelector("[name='zutat.einheit']").value
     }

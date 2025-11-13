@@ -13,8 +13,10 @@
         <p> Rezept für 
             <span class="menge-g" ></span> | 
             <span class="menge-ml"></span> | 
-            <span class="menge-st"></span> Stück  
+            <span class="menge-st"></span> Stück  <br> <br>
+            Die Materialkosten belaufen sich auf <span class="preis"></span>€
         </p>
+
         <h2> Nährwertangaben </h2>
         <table>
             <tr>
@@ -53,7 +55,7 @@
         <span style="position: absolute; top: 68px; right: 0px; font-size: 13px;"> Rezeptverwaltung </span>
         <span style="position: absolute; top: 80px; right: 0px; font-size: 10px;"> von LNoppinger.de </span>
         <h2>Zutaten</h2>
-        <table class="zutaten" style="border-spacing: 10px 0px;"></table>
+        <table class="zutaten" style="border-spacing: 10px; margin-left: -10px;"></table>
     </div>
     <div style="width: 90%;">
         <h2 style="text-align: center;">Zubereitung</h2>
@@ -131,8 +133,8 @@
         let berechnungRes = await fetch(`/api/rezept/${id}/berechnen/json`)
         let rezeptRes     = await fetch(`/api/rezept/${id}`)
 
-        if(!berechnungRes.ok && !rezeptRes.ok ) {
-            if((berechnungsRes.status == 404 || rezeptRes.status == 404)) {
+        if(!berechnungRes.ok || !rezeptRes.ok ) {
+            if((berechnungRes.status == 404 || rezeptRes.status == 404)) {
                 alert("Es konnte kein Rezept mit diesem Namen gefunden werden")
             } else if(berechnungRes.status == 400) {
                 alert(await berechnungRes.text())
@@ -159,6 +161,7 @@
         document.querySelector("#s-print .nwa-zucker" ).innerText = berechnung.naehrwertangaben.zucker
         document.querySelector("#s-print .nwa-eiweiss").innerText = berechnung.naehrwertangaben.eiweiss
         document.querySelector("#s-print .nwa-salz"   ).innerText = berechnung.naehrwertangaben.salz
+        document.querySelector("#s-print .preis"      ).innerText = berechnung.preis
         for(let name in berechnung.zutaten) {
             let menge = berechnung.zutaten[name]
             let trElem = document.createElement("tr")
@@ -168,16 +171,17 @@
             document.querySelector("#s-print .zutaten").appendChild(trElem)
         }
         let textElem = document.querySelector("#s-print .text")
-        textElem.innerText = rezept.text
+        textElem.innerHTML = rezept.text + "\n\n" + berechnung.text
+        textElem.innerHTML = textElem.innerHTML.replace(/\n/g, "<br>")
         rezept.zutaten.forEach( (zutat, i) => {
             if(zutat.einheit == "ST") {
-                zutat.einheit = "St"
+                zutat.einheit = " St"
             } else {
                 zutat.einheit = zutat.einheit.toLowerCase()
             }
-            textElem.innerText = textElem.innerText.replace("$" + String(i), zutat.menge + zutat.einheit + " " + zutat.name)
+            textElem.innerHTML = textElem.innerHTML.replace("$" + String(i), " " + zutat.menge + zutat.einheit + " " + zutat.name)
         })
-        textElem.innerText = textElem.innerText.replace(/\$[0-9]*/, "")
+        textElem.innerHTML = textElem.innerHTML.replace(/\$[0-9]*/, "")
 
         window.print()
     })

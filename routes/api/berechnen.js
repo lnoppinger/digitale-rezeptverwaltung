@@ -4,10 +4,10 @@ const routes = express()
 
 routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
     try {
-        let menge = (isNaN(req.query.menge) || req.query.menge < 1) ? 1 : req.query.menge
-        let einheit = rezeptEinheitTypes.includes(req.query.einheit?.toUpperCase()) ? req.query.einehit?.toUpperCase() : "ST"
+        let menge = 1
+        let einheit = "ST"
 
-        let data = await db.query("SELECT id FROM rezepte WHERE owner=$1 AND id=$2 AND art='R'", [req.oidc.user.sub, req.params.id])
+        let data = await db.query("SELECT id FROM rezepte WHERE owner=$1 AND id=$2", [req.oidc.user.sub, req.params.id])
         if(data.length < 1) {
             res.sendStatus(404)
             return
@@ -21,7 +21,9 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
                 id, req.oidc.user.sub, menge, einheit,
                 r => text.push(f("", r.layer*4) + f(r.menge, 6, 2) + f(r.einheit, 2) + "(" + f(r.faktor, 7, 3, false) + "x) " + f(r.name, 60)),
                 w => text.push(f("", w.layer*4) + f(w.menge, 6, 2) + f(w.einheit, 2) + "(" + f(w.faktor, 7, 3, false) + "x) "+ f(w.name, 60)),
-                z => text.push(f("", z.layer*4) + f(z.menge, 6, 2) + f(z.einheit, 2) + "(" + f(z.faktor, 7, 3, false) + "x) "+ f(z.name, 60))
+                z => text.push(f("", z.layer*4) + f(z.menge, 6, 2) + f(z.einheit, 2) + "(" + f(z.faktor, 7, 3, false) + "x) "+ f(z.name, 60)),
+                l => {},
+                t => text.push(f("", t.layer*4) + t.text)
             )
 
         } else if(req.params.art.toLowerCase() == "zutaten") {
@@ -32,7 +34,9 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
                 z => {
                     let s = `${z.allergen ? "(A)" : "  "} ${z.name}`
                     if(!text.includes(s)) text.push(s)
-                }
+                },
+                l => {},
+                t => text.push(f("", t.layer*4) + t.text)
             )
 
         } else if(req.params.art.toLowerCase() == "preis") {
@@ -45,7 +49,8 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
                 l => {
                     text.push(f("", max*4) + f(l.name, 20) + f(l.preis, 7, 3) + "(" + l.datum + ")")
                     gesamtPreis += l.preis
-                }
+                },
+                t => text.push(f("", t.layer*4) + t.text)
             )
             text.push(f("", max*4+21) + f("--------", 7))
             text.push(f("", max*4+8) + "Gesamtpreis: " + f(gesamtPreis, 7, 3))
@@ -68,7 +73,8 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
                     zucker += z.nwa_zucker
                     eiweiss += z.nwa_eiweiss
                     salz += z.nwa_salz
-                }
+                },
+                t => text.push(f("", t.layer*4) + t.text)
             )
             text.push("".padEnd(8*9-1, "-"))
             text.push(f(kcal, 6, 0) + f(kj, 8, 0) + f(fett, 8, 0) + f(gesfett, 8, 0) + f(kohlen, 8, 0) + f(zucker, 8, 0) + f(eiweiss, 8, 0) + f(salz, 8, 0))
@@ -98,10 +104,13 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
                         st: prev.st + (z.menge_.st || 0)
                     }
                 },
-                l => {
-                    preis += l.preis
-                }
+                l => preis += l.preis,
+                t => text.push(`${t.text} bei: ${t.name}`)
             )
+            if(text.length > 0) {
+                text.push("Dadurch kann es zu Fehler bei der Berchnung kommen.")
+                text.push("Kalkulieren Sie dieses Rezept um nähere Informationen zu bekommen")
+            }
             res.send({
                 preis: preis.toFixed("2").replace(".", ","),
                 naehrwertangaben: {
@@ -114,7 +123,8 @@ routes.get("/rezept/:id/berechnen/:art", async (req, res) => {
                     eiweiss: Math.round(eiweiss),
                     salz: Math.round(salz),
                 },
-                zutaten
+                zutaten,
+                text: text.join("\n")
             })
             return
 
@@ -145,23 +155,25 @@ export async function preCheck(id, layer=0, ids=[]) {
 
 
 export async function berechnen(id, userId, menge=1, einheit="ST", cbRezept=rezept=>{}, cbZwischenrezept=zwischenrezept=>{},
-    cbZutat=zutat=>{}, cbLieferant=lieferant=>{}, layer=0) {
+    cbZutat=zutat=>{}, cbLieferant=lieferant=>{}, cbText=text=>{}, layer=0) {
     let [rezept] = await db.query("SELECT * FROM rezepte WHERE owner=$1 AND id=$2", [userId, id])
+    if(isNaN(menge)) menge = 0
 
     let f
     if(einheit == "KG") {
-        f = rezept.menge_g == 0 ? 0 : menge * 1000/ rezept.menge_g
+        f = menge * 1000 / rezept.menge_g
     } else if(einheit == "G") {
-        f = rezept.menge_g == 0 ? 0 : menge / rezept.menge_g
+        f = menge / rezept.menge_g
     } else if(einheit == "ST") {
-        f = rezept.menge_st == 0 ? 0 : menge / rezept.menge_st
+        f = menge / rezept.menge_st
     } else if(einheit == "L") {
-        f = rezept.menge_ml == 0 ? 0 : menge * 1000 / rezept.menge_ml
+        f = menge * 1000 / rezept.menge_ml
     } else if(einheit == "ML") {
-        f = rezept.menge_ml == 0 ? 0 : menge / rezept.menge_ml
+        f = menge / rezept.menge_ml
     } else {
         throw Error(`Einheit muss eines der folgenden Möglichkeiten sein: KG | G | ST | L | ML. Gegeben: ${einheit} (${id})`)
     }
+    if(isNaN(f) || !isFinite(f)) f=0
     
     if(rezept.art == "Z") {
         cbZutat({
@@ -186,8 +198,13 @@ export async function berechnen(id, userId, menge=1, einheit="ST", cbRezept=reze
             layer
         })
         let lieferanten = await db.query("SELECT * FROM lieferanten WHERE rezept=$1", id)
+        if(lieferanten.length < 1) cbText({
+            name: rezept.name,
+            text: "!!! Zutat hat keine Lieferanten !!!",
+            layer: layer + 1
+        })
         let lieferantenAnteilGesamt = lieferanten.reduce((p, c) => p + c.anteil, 0)
-        return await Promise.all( lieferanten.map( lieferant => {
+        for(let lieferant of lieferanten) {
             f = lieferantenAnteilGesamt == 0 ? 0 : f * lieferant.anteil / lieferantenAnteilGesamt
             cbLieferant({
                 name: lieferant.name,
@@ -196,7 +213,8 @@ export async function berechnen(id, userId, menge=1, einheit="ST", cbRezept=reze
                 faktor: f,
                 layer: layer + 1
             })
-        }))
+        }
+        return
     }
 
     let r = {
@@ -213,10 +231,15 @@ export async function berechnen(id, userId, menge=1, einheit="ST", cbRezept=reze
     } else {
         throw Error(`Art muss eines der folgenden Möglichkeiten sein: R | W | Z. Gegeben: ${rezept.art} (${id})`)
     }
-    let zutaten = await db.query("SELECT zutat FROM mapping JOIN rezepte mapping.zutat = rezepte.id WHERE rezepte.owner=$1 AND mapping.rezept=$2", [userId, id])
-    await Promise.all( zutaten.map( zutat => {
-        return berechnen(zutat.zutat, userId, zutat.menge*f, zutat.einheit, cbRezept, cbZwischenrezept, cbZutat, cbLieferant, layer+1)
-    }))
+    let zutaten = await db.query("SELECT zutat, menge FROM mapping JOIN rezepte ON mapping.zutat = rezepte.id WHERE rezepte.owner=$1 AND mapping.rezept=$2", [userId, id])
+    if(zutaten.length < 1) cbText({
+        name: rezept.name,
+        text: "!!! Rezept hat keine Zutat !!!",
+        layer: layer + 1
+    })
+    for(let zutat of zutaten) {
+        await berechnen(zutat.zutat, userId, zutat.menge*f, zutat.einheit, cbRezept, cbZwischenrezept, cbZutat, cbLieferant, cbText, layer+1)
+    }
 }
 
 let f = format
