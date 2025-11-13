@@ -1,5 +1,8 @@
 <img src="/icon.png" style="height: 50px; margin-top: 50px; margin-bottom: -20px;">
 <h1 style="text-align: center;"> Meine digitale Rezeptverwaltung</h1>
+<% if(locals.useOidc) { %>
+<p style="margin-top: -15px;"> Hallo, <%= locals.name %> </p>
+<% } %>
 <a href="/zutaten">
     <div>
         <span> Zutaten </span>

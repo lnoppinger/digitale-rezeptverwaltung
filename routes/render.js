@@ -9,7 +9,8 @@ routes.use(expressLayouts)
 routes.get("/", (req, res) => {
     res.render("home", {
         useOidc: config.OIDC_ISSUER_URL != null,
-        isLoggedIn: req.oidc.isAuthenticated()
+        isLoggedIn: req.oidc.isAuthenticated(),
+        name: req.oidc.user.given_name || req.oidc.user.name
     })
 })
 

@@ -71,7 +71,9 @@ if(config.OIDC_ISSUER_URL != null) {
     app.use( (req, res, next) => {
         req.oidc = {
             user: {
-                sub: "11111111-1111-1111-1111-111111111111"
+                sub: "11111111-1111-1111-1111-111111111111",
+                given_name: "Benutzer",
+                name: "Benutzer"
             },
             isAuthenticated: () => false
         }

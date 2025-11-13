@@ -104,10 +104,11 @@ Die blauen Zutatenblöcke können an die richtige Position geschoben werden.</di
 
     dialog:open {
         position: fixed;
+        padding: 0;
+        border: 0;
         top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
         display: flex;
         flex-direction: row;
         justify-content: center;
@@ -144,7 +145,7 @@ Die blauen Zutatenblöcke können an die richtige Position geschoben werden.</di
 </template>
 
 <dialog id="neue-zutat-dialog">
-    <div class="inner">
+    <div class="inner" style="background-color: var(--white);">
         <button class="material-symbols-outlined" id="dialog-close" style="border: none;margin-left: 270px; margin-bottom: 15px; width: 35px;"> close </button>
         <label> Name der Zutat <input type="text" name="zutat.name" list="zutaten-liste"></label>
         <label> Menge
